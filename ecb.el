@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: nil -*-
 ;;; ecb.el --- a code browser for Emacs
 
 ;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
@@ -146,31 +147,17 @@
 ;; now we load all the cedet stuff
 (require 'ecb-cedet-wrapper)
 
-;; if we miss some of the requirements we report an error.
-(when ecb-cedet-missing-libraries
-  (if (ecb-noninteractive)
-      (ecb-error "ECB is missing the libs %s of CEDET - check your CEDET-installation/setup!"
-                 ecb-cedet-missing-libraries)
-    (ecb-check-requirements)))
-
 ;; If we are here we can load ECB because at least we have installed and
 ;; loaded all required packages. The correct version will be checked
 ;; at start- or byte-compile-time
 
-
-(message "ECB %s uses CEDET %s (contains semantic %s, eieio %s, speedbar %s)."
+(message "ECB %s uses Emacs %s with eieio %s."
          ecb-version
-         (or (and (boundp 'cedet-version)
-                  cedet-version)
-             "<unknown version>")
-         (or (and (boundp 'semantic-version)
-                  semantic-version)
+         (or (and (boundp 'emacs-version)
+                  emacs-version)
              "<unknown version>")
          (or (and (boundp 'eieio-version)
                   eieio-version)
-             "<unknown version>")
-         (or (and (boundp 'speedbar-version)
-                  speedbar-version)
              "<unknown version>"))
 
 ;; rest of ecb loads
@@ -1124,13 +1111,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
       ;; we activate only if all before-hooks return non nil
       (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
-        ;; checking if there are cedet or semantic-load problems
-        (ecb-check-cedet-load)
-        (ecb-check-semantic-load)
-
-        ;; checking the requirements
-        (ecb-check-requirements)
-
         (condition-case ecb-error-object
             (progn
 
@@ -1563,7 +1543,6 @@ This is done for all lisp-files of ECB if FORCE-ALL is not nil or for each
 lisp-file FILE.el which is either newer than FILE.elc or if FILE.elc doesn't
 exist."
   (interactive "P")
-  (ecb-check-requirements)
   (let ((files (ecb-directory-files (ecb-file-name-directory (locate-library "ecb"))
                                     t)))
     (save-excursion

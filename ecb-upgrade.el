@@ -1138,7 +1138,7 @@ If FULL-NEWS is not nil then the NEWS-file is displayed in another window."
   "Check for all ECB-options if the current value is compatible to the type.
 If not upgrade it to the new type or reset it to the default-value of current
 ECB. Try also to upgrade renamed options. Displays all upgraded or reset
-options with their old \(before the upgrade/reset) and new values."
+options with their old (before the upgrade/reset) and new values."
   (interactive)
   (ecb-check-not-compatible-options)
   (ecb-upgrade-not-compatible-options)
@@ -1155,44 +1155,13 @@ options with their old \(before the upgrade/reset) and new values."
 
 (defvar ecb-all-requirements-available nil)
 
-(defun ecb-check-requirements ()
-  "Ensure that if all requirements of ECB are fulfilled.
-
-Currently this is a check if the right `cedet-version is loaded."
-
-  (when ecb-cedet-missing-libraries
-    (ecb-error "ECB is missing the libs %s of CEDET - check the CEDET-installation/setup!"
-               ecb-cedet-missing-libraries))
-
-  (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
-             (not ecb-all-requirements-available))
-    (let ((cedet-required-version-str-min (ecb-package-version-list2str
-                                           ecb-cedet-required-version-min))
-          (version-error nil))
-      ;; check if cedet-version is correct
-      ;; And no longer check against a Maximum version
-      (when (or (not (boundp 'cedet-version))
-                (ecb-package-version-list<
-                 (ecb-package-version-str2list emacs-version)
-                 ecb-cedet-required-version-min))
-        (setq version-error (concat "cedet ["
-                                    cedet-required-version-str-min
-                                    "]")))
-      (if (null version-error)
-          ;; this is the only place where this variable is set
-          (setq ecb-all-requirements-available t)
-        (ecb-error "ECB can only be used with %s! Please install it and restart Emacs!"
-                   version-error))))
-  (when ecb-all-requirements-available
-    (message "All requirements for ECB %s fulfilled - Enjoy it!" ecb-version)))
-
 
 (defun ecb-package-version-str2list (ver-str)
   "Convert the version-str VER-STR to the internal version-list format with
 the following elements of the version-list:
 1. Major-version
 2. Minor-version
-3. 0 = alpha, 1 = beta, 2 = pre, 3 = nothing \(e.g. \"1.4\"), 4 = . \(e.g. \"1.4.3\"
+3. 0 = alpha, 1 = beta, 2 = pre, 3 = nothing (e.g. \"1.4\"), 4 = . \(e.g. \"1.4.3\"
 4. Subversion after the alpha, beta, pre or .
 
 Return nil if ver-str has not the required syntax:
