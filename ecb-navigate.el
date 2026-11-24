@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; ecb-navigate.el --- Browser-navigation for ECB
 
 ;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
@@ -118,10 +119,13 @@
 
 ;; This method must return nil if saving can not be performed and otherwise
 ;; not nil!
-(cl-defmethod ecb-nav-save ((item ecb-nav-history-item))
+(cl-defgeneric ecb-nav-save (item)
+  (:documentation "Generic function for specialized ecb-nav-save methods"))
+
+(cl-defmethod ecb-nav-save ((_item ecb-nav-history-item))
   t)
 
-(cl-defmethod ecb-nav-is-valid ((item ecb-nav-history-item))
+(cl-defmethod ecb-nav-is-valid ((_item ecb-nav-history-item))
   t)
 
 
@@ -145,9 +149,11 @@
   )
 
 (defun ecb-nav-tag-history-item-new (tag-name tag-buffer tag-start
-                                                  tag-end &optional narrow)
-  (ecb-nav-tag-history-item tag-name
-                              :tag-buffer tag-buffer
+                                              tag-end &optional narrow)
+
+  ;; TODO : tec-leo remove tag-name
+; (ecb-nav-tag-history-item tag-name
+  (ecb-nav-tag-history-item   :tag-buffer tag-buffer
                               :tag-start tag-start
                               :tag-end tag-end
                               :tag-name tag-name
@@ -229,8 +235,9 @@ case no position saving is done."
          (ind-buffer-name (and file
                                (buffer-base-buffer)
                                (buffer-name)))
-         (item (ecb-nav-file-history-item (buffer-name)
-                                          :file file
+         ;; TODO : tec-leo remove buffer name
+         ; (item (ecb-nav-file-history-item (buffer-name)
+         (item (ecb-nav-file-history-item :file file
                                           :indirect-buffer-name ind-buffer-name)))
     (ecb-nav-set-pos item (point))
     (ecb-nav-set-window-start item
@@ -292,22 +299,20 @@ case no position saving is done."
 (defvar ecb-nav-current-node nil)
 (setq ecb-nav-current-node ecb-nav-first-node)
 
-
 (defun ecb-nav-initialize ()
   (setq ecb-nav-first-node
         (ecb-dlist-node-new (ecb-nav-history-item :pos "First item")))
   (setq ecb-nav-current-node ecb-nav-first-node))
 
-
 (defun ecb-nav-jump-to-tag (file tag &optional narrow)
   (ecb-nav-save-current)
   (find-file file)
-  (ecb-nav-add-item (ecb-nav-tag-history-item tag narrow)))
+  (ecb-nav-add-item (ecb-nav-tag-history-item :tag tag narrow)))
 
 (defun ecb-nav-jump-to-file (file)
   (ecb-nav-save-current)
   (find-file file)
-  (ecb-nav-add-item (ecb-nav-file-history-item file)))
+  (ecb-nav-add-item (ecb-nav-file-history-item :file file)))
 
 (defun ecb-nav-add-item (item)
   (let ((node (ecb-dlist-node-new item)))
