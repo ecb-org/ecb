@@ -790,7 +790,7 @@ IMPORTANT: Do not use the function directly. Always use `ecb-enable-advices',
 `ecb-disable-advices' or `ecb-with-original-adviced-function-set'!."
   (if (< arg 0)
     (progn
-      (message "Advice disable : %s class %s with %s" func-sym ad-class ad-func )
+;      (message "Advice disable : %s class %s with %s" func-sym ad-class ad-func )
       (advice-remove func-sym ad-func)
       (ecb-advices-debug-error func-sym ad-class 'disabling))
 

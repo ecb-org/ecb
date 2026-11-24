@@ -131,7 +131,7 @@
               (ecb-advice-test-defun-2))
             (message "LOC-2 ecb-test-with-original-advice-set")
             (ecb-advice-test-defun-1)
-            (ecb-advice-test-defun-2)            
+            (ecb-advice-test-defun-2)
             (message "LOC-3 ecb-test-with-original-advice-set")
             (ecb-with-original-adviced-function-set 'ecb-advice-test-set
               (ecb-advice-test-defun-1)
@@ -139,7 +139,7 @@
               (message "LOC-4 ecb-test-with-original-advice-set")
               (ecb-with-original-adviced-function-set 'ecb-advice-test-set
                 (ecb-advice-test-defun-1)
-                (ecb-advice-test-defun-2)))            
+                (ecb-advice-test-defun-2)))
             (message "LOC-5 ecb-test-with-original-advice-set")
             )
           (ecb-advice-test-defun-1)
@@ -156,119 +156,119 @@
 ;; expected output:
 
 ;;  !!! BEGIN ecb-test-with-original-advice-set !!!!
-;;  ECB 2.33: debug enabling the advice-set: ecb-advice-test-set
-;;  ECB 2.33: debug enabling of 'after' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug enabling of 'before' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug enabling of 'around' advice ecb-advice-test-defun-1 
-;;  ECB 2.33: debug disabling the advice-set: ecb-always-disabled-advices
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-4 
-;;  ECB 2.33: debug disabling of 'after' advice ecb-advice-test-defun-3 
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-3 
-;;  ECB 2.33: debug disabling of 'around' advice count-windows 
-;;  ECB 2.33: debug disabling of 'around' advice one-window-p 
-;;  ECB 2.33: debug disabling of 'around' advice walk-windows 
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-1 
+;;  ECB 2.52: debug enabling the advice-set: ecb-advice-test-set
+;;  ECB 2.52: debug enabling of 'after' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug enabling of 'before' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug enabling of 'around' advice ecb-advice-test-defun-1
+;;  ECB 2.52: debug disabling the advice-set: ecb-always-disabled-advices
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-4
+;;  ECB 2.52: debug disabling of 'after' advice ecb-advice-test-defun-3
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-3
+;;  ECB 2.52: debug disabling of 'around' advice count-windows
+;;  ECB 2.52: debug disabling of 'around' advice one-window-p
+;;  ECB 2.52: debug disabling of 'around' advice walk-windows
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-1
 ;;  I'm the AROUND advice of ecb-advice-test-defun-1
-;;  ECB 2.33: debug calling of 'before' advice ecb-advice-test-defun-2 
+;;  ECB 2.52: debug calling of 'before' advice ecb-advice-test-defun-2
 ;;  I'm the BEFORE advice of ecb-advice-test-defun-2
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
-;;  ECB 2.33: debug calling of 'after' advice ecb-advice-test-defun-2 
+;;  ECB 2.52: debug calling of 'after' advice ecb-advice-test-defun-2
 ;;  I'm the AFTER advice of ecb-advice-test-defun-2
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - ENTRY
-;;  ECB 2.33: debug disabling the advice-set: ecb-advice-test-set
-;;  ECB 2.33: debug disabling of 'after' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug disabling of 'before' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-1 
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - ENTRY
+;;  ECB 2.52: debug disabling the advice-set: ecb-advice-test-set
+;;  ECB 2.52: debug disabling of 'after' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug disabling of 'before' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  LOC-0.1 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - ENTRY
-;;  ECB 2.33: debug enabling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - ENTRY
+;;  ECB 2.52: debug enabling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - ENTRY
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - ENTRY
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug with always disabled ecb-advice: after ecb-advice-test-defun-3 - ENTRY
-;;  ECB 2.33: debug enabling of 'after' advice ecb-advice-test-defun-3 
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug with always disabled ecb-advice: after ecb-advice-test-defun-3 - ENTRY
+;;  ECB 2.52: debug enabling of 'after' advice ecb-advice-test-defun-3
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
-;;  ECB 2.33: debug calling of 'after' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'after' advice ecb-advice-test-defun-3
 ;;  I'm the AFTER advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-4 - ENTRY
-;;  ECB 2.33: debug enabling of 'around' advice ecb-advice-test-defun-4 
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-4 - ENTRY
+;;  ECB 2.52: debug enabling of 'around' advice ecb-advice-test-defun-4
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
-;;  ECB 2.33: debug calling of 'after' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'after' advice ecb-advice-test-defun-3
 ;;  I'm the AFTER advice of (the always disabled) ecb-advice-test-defun-3
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-4 
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-4
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-4
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-4 
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-4 - EXIT
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-4
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-4 - EXIT
 ;;  LOC-0.2 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
-;;  ECB 2.33: debug calling of 'after' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'after' advice ecb-advice-test-defun-3
 ;;  I'm the AFTER advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug disabling of 'after' advice ecb-advice-test-defun-3 
-;;  ECB 2.33: debug with always disabled ecb-advice: after ecb-advice-test-defun-3 - EXIT
+;;  ECB 2.52: debug disabling of 'after' advice ecb-advice-test-defun-3
+;;  ECB 2.52: debug with always disabled ecb-advice: after ecb-advice-test-defun-3 - EXIT
 ;;  LOC-0.3 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - EXIT
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - EXIT
 ;;  LOC-0.4 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-3 
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-3
 ;;  I'm the AROUND advice of (the always disabled) ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-3 
-;;  ECB 2.33: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - EXIT
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-3
+;;  ECB 2.52: debug with always disabled ecb-advice: around ecb-advice-test-defun-3 - EXIT
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-3
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-4
 ;;  LOC-1 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - ENTRY
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - ENTRY
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - EXIT
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - EXIT
 ;;  LOC-2 ecb-test-with-original-advice-set
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
 ;;  LOC-3 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - ENTRY
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - ENTRY
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
 ;;  LOC-4 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - ENTRY
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - ENTRY
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - EXIT
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - EXIT
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - EXIT
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - EXIT
 ;;  LOC-5 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug enabling the advice-set: ecb-advice-test-set
-;;  ECB 2.33: debug enabling of 'after' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug enabling of 'before' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug enabling of 'around' advice ecb-advice-test-defun-1 
-;;  ECB 2.33: debug with original advice-set: ecb-advice-test-set - EXIT
-;;  ECB 2.33: debug calling of 'around' advice ecb-advice-test-defun-1 
+;;  ECB 2.52: debug enabling the advice-set: ecb-advice-test-set
+;;  ECB 2.52: debug enabling of 'after' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug enabling of 'before' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug enabling of 'around' advice ecb-advice-test-defun-1
+;;  ECB 2.52: debug with original advice-set: ecb-advice-test-set - EXIT
+;;  ECB 2.52: debug calling of 'around' advice ecb-advice-test-defun-1
 ;;  I'm the AROUND advice of ecb-advice-test-defun-1
-;;  ECB 2.33: debug calling of 'before' advice ecb-advice-test-defun-2 
+;;  ECB 2.52: debug calling of 'before' advice ecb-advice-test-defun-2
 ;;  I'm the BEFORE advice of ecb-advice-test-defun-2
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
-;;  ECB 2.33: debug calling of 'after' advice ecb-advice-test-defun-2 
+;;  ECB 2.52: debug calling of 'after' advice ecb-advice-test-defun-2
 ;;  I'm the AFTER advice of ecb-advice-test-defun-2
 ;;  LOC-6 ecb-test-with-original-advice-set
-;;  ECB 2.33: debug disabling the advice-set: ecb-advice-test-set
-;;  ECB 2.33: debug disabling of 'after' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug disabling of 'before' advice ecb-advice-test-defun-2 
-;;  ECB 2.33: debug disabling of 'around' advice ecb-advice-test-defun-1 
+;;  ECB 2.52: debug disabling the advice-set: ecb-advice-test-set
+;;  ECB 2.52: debug disabling of 'after' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug disabling of 'before' advice ecb-advice-test-defun-2
+;;  ECB 2.52: debug disabling of 'around' advice ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-1
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-2
 ;;  I'm the ORIGINAL function ecb-advice-test-defun-3
