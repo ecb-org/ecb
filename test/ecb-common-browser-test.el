@@ -1,6 +1,6 @@
 ;;; ecb-common-browser-test.el --- tests for ecb-common-browser.el -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;;; Commentary:

@@ -1,6 +1,6 @@
 ;;; run-tests.el --- batch entry point for the ECB test-suite -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;;; Commentary:

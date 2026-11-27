@@ -1,6 +1,6 @@
 ;;; ecb-symboldef-test.el --- tests for ecb-symboldef.el and ecb-analyse.el -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;;; Commentary:

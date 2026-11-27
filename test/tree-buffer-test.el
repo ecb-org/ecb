@@ -1,6 +1,6 @@
 ;;; tree-buffer-test.el --- tests for tree-buffer.el -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;;; Commentary:

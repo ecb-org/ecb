@@ -1,6 +1,6 @@
 ;;; ecb-layout-defs-test.el --- golden tests for ecb-layout-defs.el -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;;; Commentary:

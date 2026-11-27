@@ -20,9 +20,12 @@ reviewer and asks for a Linux-style `;; Assisted-by: AGENT:MODEL` line under
 the `;; Author:` line of each file containing AI-generated code. Every file
 in `test/` carries one. Any fix PR in which an assistant touched a shipped
 `.el` file must add the line to that file, and the PR description must say
-so. Note that GNU Emacs itself rejects LLM-generated contributions, so none
-of this work can be offered upstream to Emacs/CEDET without a clean-room
-rewrite.
+so. GNU Emacs and GNU ELPA reject LLM-generated contributions outright, so
+none of this work can be offered upstream to Emacs/CEDET without a
+clean-room rewrite; MELPA's stance on AI-generated packages is under
+review. The immediate focus is targeted, human-reviewed fixes; broader use
+of AI assistance is not ruled out and is a judgment call per change, with
+the disclosure rule above applying regardless of scope.
 
 How a fix lands: each bug in the ledger has a test marked
 `:expected-result :failed`. The fix PR changes the code, removes the marker
@@ -775,7 +778,7 @@ Checked against the repo on 2026-11-27; status of each MELPA requirement:
 | Recipe `:files` minimal | Includes `ecb2/` (unfinished rewrite) and would pick up `ecb-advice-test.el`, `ecb-examples.el` | After Step 6 removes `ecb2/` and `ecb-advice-test.el`, open a MELPA PR updating the recipe to `("*.el" "ecb-images" "ecb.texi")` minus examples, and confirm the texi still builds to info in the sandbox |
 | Tagged release for MELPA stable (`version-to-list`-compatible tag) | `v2.52` exists; nothing since | Tag `v2.53` when Steps 2-3 are merged (bug-fix release), then follow with tags per step |
 | Official repository, active maintainer, 1 month public history | Satisfied; recipe should point at the canonical repo, not a fork | Confirm the `:repo` in the recipe is the repo you consider canonical; fix in the same recipe PR if not |
-| AI policy: human first reviewer, `Assisted-by:` lines | `test/` files have the line; no shipped file has AI-generated code yet | Enforced per PR (see the policy note at the top). MELPA says its stance on AI-generated *packages* is under review; keep AI assistance to tests, tooling and targeted fixes with human review so ECB stays clearly a human-maintained package with assisted contributions |
+| AI policy: human first reviewer, `Assisted-by:` lines | `test/` files have the line; no shipped file has AI-generated code yet | Enforced per PR (see the policy note at the top). MELPA's stance on AI-generated *packages* is under review; disclosure and first-reviewer-is-human apply to every AI-assisted change, whatever its size |
 | Build and install via `package-build` | Not tested | Run `make recipes/ecb` and `make sandbox INSTALL=ecb` from a MELPA checkout before the recipe PR; add it to the release checklist |
 
 Order of work: the metadata and `COPYING` items are a one-evening PR and

@@ -1,6 +1,6 @@
 ;;; ecb-test-helpers.el --- shared fixtures for the ECB test-suite -*- lexical-binding: t -*-
 
-;; Author: Ryan Ware
+;; Author: Ryan Ware <ware@opensourceware.me>
 ;; Assisted-by: Claude:claude-fable-5-1
 
 ;; Copyright (C) 2026 Free Software Foundation, Inc.
