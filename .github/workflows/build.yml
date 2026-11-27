@@ -1,0 +1,42 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Emacs ${{ matrix.emacs_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          - "29.4"
+          - "30.1"
+          - "31.1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+
+      - name: Byte-compile and generate autoloads
+        # The compile script exits non-zero on hard errors; byte-compiler
+        # warnings are printed but not (yet) fatal.
+        run: make ecb autoloads
+
+      - name: Run ERT suite (byte-compiled)
+        # Tests run against the freshly compiled .elc files. stdin is closed by
+        # the Makefile so an unexpected prompt fails fast instead of hanging.
+        run: make test
+
+      - name: Run ERT suite (uncompiled)
+        # Also run from source so a stale/missing .elc never masks a failure
+        # and backtraces stay readable.
+        run: make clean && make test

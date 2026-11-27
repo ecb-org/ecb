@@ -164,6 +164,19 @@ install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
 clean:
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script ecb-autoloads.el*
 
+# Run the ERT test-suite in test/. Tests never read stdin, so we close it
+# to make any accidental prompt fail fast instead of hanging.
+.PHONY: test test-unit test-file
+test:
+	$(EBATCH) -l test/run-tests.el < /dev/null
+
+test-unit:
+	$(EBATCH) -l test/run-tests.el -- unit < /dev/null
+
+# make test-file FILE=tree-buffer
+test-file:
+	$(EBATCH) -l test/run-tests.el -- $(FILE) < /dev/null
+
 # The targets below are only for maintaining the ECB-package.
 
 $(ecb_INFO_DIR)/$(ecb_INFO): online-help
