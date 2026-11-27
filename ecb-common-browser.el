@@ -35,24 +35,34 @@
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
+;; !!!!!!!!!!!!!!!! Caution !!!!!!!!!!!!!!!!!!!!!!!!!!
+;; when editing that file which defines such an advice and then saving and
+;; byte-compiling this file then this reactivates this advice - just a hint -
+;; should be not a problem for ECB because the users should not edit the
+;; ecb-code ;-) But we should have this in mind!!!!!!!!!!!!!!!!!!!!!!!
 
 ;;; Code:
 
 (eval-when-compile
   (require 'silentcomp))
 
-
 (require 'ecb-util)
 
 (require 'tree-buffer)
 (require 'ecb-mode-line)
 (require 'ecb-navigate)
+(require 'ecb-upgrade)
 
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl-lib))
 
 (silentcomp-defvar modeline-map)
+
+(defvar ecb-show-advice-messages nil
+  "Show advice messages used for debugging the device system during the
+conversion from old to new device system.
+Only temporary, should be deleted after finishing the conversion.")
 
 (defgroup ecb-tree-buffer nil
   "General settings related to the tree-buffers of ECB."
@@ -770,7 +780,8 @@ Example:
                       '(around after before)))
          (error "The advice-class %s is not allowed - only around, after and before!"
                 (symbol-name (quote ,advice-class))))
-     (add-to-list 'ecb-adviced-functions (cons (quote ,adviced-function) (quote ,advice-class)))
+     (add-to-list 'ecb-adviced-functions (cons (quote ,adviced-function)
+                                               (quote ,advice-class)))
      (eval-and-compile
        (defadvice ,adviced-function (,advice-class ecb)
          ,advice-docstring
@@ -868,6 +879,62 @@ be disabled regardless if permanent or not."
                      (funcall permanent adviced-function-set-var)))
       (dolist (elem (symbol-value adviced-function-set-var))
         (ecb-enable-ecb-advice (car elem) (cdr elem) -1)))))
+
+;; for the outmost-caller-stuff see ecb-with-original-adviced-function-set
+(defun ecb-eval-with-advice (advice-fun advice-class fun-symbol)
+  "Evaluates if FUN-SYMBOL is the adviced version of ADVICE-FUN with
+class ADVICE-CLASS defined for the advice-set `ecb-always-disabled-advices'.
+Otherwise an error occurs. The advice must be disabled afterwards in
+`ecb-disable-with-advice'"
+
+  (let ((outmost-caller-p nil)
+        (class-list nil)
+        (advice-list nil))
+
+    (setq class-list (list advice-fun
+                           (concat ":" (symbol-name advice-class)) fun-symbol))
+
+    ;; first check if the function symbol belongs to disabled advices
+    ;; check old and new version of advice system
+    (if (not (or (member (cons advice-fun advice-class) ecb-always-disabled-advices)
+                 (member class-list ecb-always-disabled-advices)))
+       (error "Advice for %s with class %s not registered in ecb-always-disabled-advices!"
+              (symbol-name fun-symbol)
+              (symbol-name advice-class)))
+
+    ;; get property of advice-fun
+    (setq advice-list (get advice-fun 'ecb-with-ecb-advice))
+
+    ;; we have to check if we are the outmost-caller of this macro for this
+    ;; we check if advice-list is a list and advice-class is a list member
+    (when (not (and (listp advice-list)
+                    (member advice-class advice-list)))
+      (setq outmost-caller-p t)
+      (setq advice-list (append (list advice-class) advice-list))
+      (put advice-fun 'ecb-with-ecb-advice advice-list)
+
+      ; enable advice-function
+      (ecb-enable-ecb-advice advice-fun advice-class 1)      )
+
+    ; return if we are the outmost caller
+    outmost-caller-p))
+
+(defun ecb-disable-with-advice (advice-fun advice-class)
+  "DISABLES the ADVICE-FUN with the class ADVICE-CLASS and deletes
+ADVICE-CLASS from the property list `ecb-with-ecb-advice' of the ADVICE-FUN"
+
+  (let ((advice-list nil))
+
+    ;; get property of advice-fun
+    (setq advice-list (get advice-fun 'ecb-with-ecb-advice))
+
+    ; delete advice-class from the property list
+    (setq advice-list (delete advice-class advice-list))
+    (put advice-fun 'ecb-with-ecb-advice advice-list)
+
+    ; disable advice-function
+    (ecb-enable-ecb-advice advice-fun advice-class -1)))
+
 
 ;; for the outmost-caller-stuff see ecb-with-original-adviced-function-set
 (defmacro ecb-with-ecb-advice (function-symbol advice-class &rest body)
@@ -974,18 +1041,11 @@ Example:
 
 (put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
 
-
-;; !!!!!!!!!!!!!!!! Caution !!!!!!!!!!!!!!!!!!!!!!!!!!
-;; when editing that file which defines such an advice and then saving and
-;; byte-compiling this file then this reactivates this advice - just a hint -
-;; should be not a problem for ECB because the users should not edit the
-;; ecb-code ;-) But we should have this in mind!!!!!!!!!!!!!!!!!!!!!!!
 (defecb-advice-set ecb-always-disabled-advices
   "These advices are always disabled.
 This advice-set can not be enabled by `ecb-enable-advices' but such an
 advice has to be activated 'on demand' by the caller. Such an advice must be
 used with the macro `ecb-with-ecb-advice'.")
-
 
 (defun ecb-source-make (filename &optional buffer)
   "Build a source-object from FILENAME and BUFFER.

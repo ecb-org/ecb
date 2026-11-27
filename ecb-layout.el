@@ -110,6 +110,12 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
+
+;; Modified  : Oskar Leirich                Last changes  : 25.Oct.2026
+;;
+;; removed advice scroll-other-window completely because
+;; `scroll-other-window' now uses the function `other-window-for-scrolling'.
+
 ;;; Code:
 
 (eval-when-compile
@@ -1488,28 +1494,6 @@ either not activated or it behaves exactly like the original version!"
                    ;; compilation-window-height is large enough.
                    (when (window-live-p w)
                      (select-window w))))))))))
-
-;; We need this advice only because the ugly implementation of Emacs:
-;; `scroll-other-window' uses per default not the function
-;; `other-window-for-scrolling'.
-(defecb-advice scroll-other-window around ecb-layout-basic-adviced-functions
-  "See the advice-documentation of `other-window-for-scrolling' to get all
-details which window will be scrolled."
-  (if (or (not ecb-minor-mode)
-          (not (equal (selected-frame) ecb-frame))
-          (and (equal (selected-window) (minibuffer-window ecb-frame))
-               minibuffer-scroll-window))
-      (ecb-with-original-basic-functions
-       ad-do-it)
-    (let* ((o-w (other-window-for-scrolling))
-           (o-w-s-b (window-buffer o-w))
-           (other-window-scroll-buffer (if (or (equal (current-buffer) o-w-s-b)
-                                               (equal (minibuffer-window ecb-frame)
-                                                      o-w))
-                                           nil
-                                         o-w-s-b)))
-      ad-do-it)))
-
 
 (defun ecb-toggle-scroll-other-window-scrolls-compile (&optional arg)
   "Toggle the state of `ecb-scroll-other-window-scrolls-compile-window'.
