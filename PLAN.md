@@ -6,7 +6,7 @@ fix work and have been re-planned from the findings of the suite.
 
 Baseline: all 33 files byte-compile with no errors (116 warnings) on Emacs
 30.2 and 31.1, autoloads generate, `ecb-activate`/`ecb-deactivate` work, and
-`make test` reports 502 tests with 0 unexpected results on both versions.
+`make test` reports 525 tests with 0 unexpected results on both versions.
 25 of the 26 built-in layouts draw on Emacs 31 (see Step 2 for the one that
 does not).
 
@@ -39,7 +39,7 @@ and needs a look before merging.
 ## Step 0: Unit test proposal
 
 **Status: done (2026-11-26, revalidated on Emacs 31.1 2026-11-27).** `test/`
-holds an ERT suite of 502 tests across 16 files; `make test` runs it in
+holds an ERT suite of 525 tests across 17 files; `make test` runs it in
 about 20-30 s on Emacs 30.2 and 31.1, from source or from `.elc`. 26 tests
 are marked `:expected-result :failed` (two of them only on Emacs >= 31,
 decided by a runtime probe rather than a version check); each one
@@ -63,6 +63,7 @@ cannot regress silently.
 | `ecb-mode-line-test.el` | 10 | 0 |
 | `ecb-symboldef-test.el` (+ analyse) | 16 | 1 |
 | `ecb-misc-modules-test.el` (help, face, tod, speedbar, compatibility, winman, create-layout, buffertab, multiframe, jde, eshell, wrappers, autogen) | 44 | 6 |
+| `ecb-compatibility-test.el` (behaviour of every `ecb-compatibility.el` advice, ECB and non-ECB branch; the gate for the `defadvice` migration of that file) | 23 | 0 |
 | `ecb-integration-test.el` | 12 | 1 |
 
 Known-bug tests (grep `:expected-result :failed` for the full docstrings;
@@ -699,8 +700,10 @@ Finishing this step closes the ledger from Step 0.
   set, fix the error message that prints the literal symbol `advice-class`,
   drop the bogus `'calling` debug event at registration time.
 - Convert the remaining ~70 `defadvice` forms to named functions plus
-  `ecb-add-to-advice-set`, in this order: `ecb-compatibility.el`,
-  `ecb-speedbar.el`, `ecb-winman-support.el`, `ecb-eshell.el`,
+  `ecb-add-to-advice-set`, in this order: `ecb-compatibility.el` (gated by
+  `test/ecb-compatibility-test.el`, which calls each advised command in the
+  ECB and the non-ECB branch; the first attempt, PR #59, fails 11 of its 23
+  tests), `ecb-speedbar.el`, `ecb-winman-support.el`, `ecb-eshell.el`,
   `ecb-create-layout.el`, `ecb-file-browser.el`, `ecb-method-browser.el`,
   then `ecb-layout.el` last (~45 advices including `delete-window`,
   `split-window`, `display-buffer`; the riskiest).
