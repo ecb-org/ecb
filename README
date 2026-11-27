@@ -147,6 +147,29 @@ For Linux, Makefile tries to use reasonable defaults.
 
 You can print configuration used in Makefile using `make printconf'.
 
+-------
+Testing
+-------
+
+ECB ships an ERT test-suite in the test/ directory. It runs in batch mode
+with no window system, never reads stdin and never touches your home
+directory or custom-file; everything happens in temporary copies of the
+fixture project under test/fixtures/.
+
+  make test                      run the whole suite
+  make test-unit                 skip the slower end-to-end tests
+  make test-file FILE=tree-buffer  run only test/tree-buffer-test.el
+  ECB_TEST_SELECTOR='"layout"' make test   any ERT selector
+
+The suite passes from source and after `make ecb' (byte-compiled). Tests
+marked `:expected-result :failed' document known bugs; their docstrings
+explain the bug and they start failing-as-unexpected (i.e. passing) once
+the bug is fixed, at which point the marker should be removed.
+
+The GitHub Actions workflow .github/workflows/build.yml runs
+`make ecb autoloads test' on Emacs 29 and 30 for every push and pull
+request.
+
 -----
 Usage
 -----
