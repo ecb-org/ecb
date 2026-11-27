@@ -450,8 +450,28 @@ window although `ecb-compile-window-height' asks for one."
         (kill-buffer buf)))))
 
 (ert-deftest ecb-other-window-cycles-through-edit-and-ecb-windows ()
+  "Known bug (Emacs >= 31): `ecb-other-window-behavior' defaults to the
+symbol `all', and `ecb-get-other-window' checks `functionp' on it before
+its `cl-case'. Emacs 31 added a builtin function `all', so every
+`other-window' with the default setting now signals
+wrong-number-of-arguments."
+  :expected-result (if (ecb-test-symbol-all-is-a-function-p) :failed :passed)
   (ecb-test-with-ecb _proj
     (let ((ecb-other-window-behavior 'all))
+      (let (seen)
+        (dotimes (_ 5)
+          (push (ecb-where-is-point) seen)
+          (other-window 1))
+        (should (equal (ecb-where-is-point) '(edit . 1)))
+        (should (= (length (delete-dups seen)) 5))))))
+
+(ert-deftest ecb-other-window-cycles-with-custom-function ()
+  "Cycling through all windows via a user function works on every Emacs
+and is what `all' is supposed to do."
+  (ecb-test-with-ecb _proj
+    (let ((ecb-other-window-behavior
+           (lambda (win-list _edit _ecb _comp _minibuf _point-loc nth)
+             (ecb-next-listelem win-list (selected-window) nth))))
       (let (seen)
         (dotimes (_ 5)
           (push (ecb-where-is-point) seen)

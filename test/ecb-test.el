@@ -238,10 +238,10 @@
   "KNOWN BUG: `ecb-get-tags-for-non-semantic-files' uses `cl-return' inside a
 plain `dolist', which establishes no `cl-block'.  As soon as imenu returns a
 grouped tag list (e.g. an elisp buffer without an active semantic parser,
-where imenu produces a \"Variables\" group) the sync throws to a
-non-existent catch.  Outside ERT this surfaces as a `no-catch' error that
-is swallowed by a `condition-case'; inside ERT it aborts the test run, so
-the throw is caught here and turned into a failure."
+where imenu produces a \"Variables\" group) the function exits
+non-locally: a `no-catch' throw up to Emacs 30, a `void-variable' error
+on Emacs 31 whose `cl-block' expansion changed.  Either way the sync's
+`condition-case' swallows it and the methods buffer stays empty."
   :expected-result :failed
   (ecb-test-with-ecb proj
     (find-file (expand-file-name "README.txt" proj))
@@ -250,8 +250,11 @@ the throw is caught here and turned into a failure."
     (setq-local imenu-create-index-function
                 (lambda () '(("Variables" ("x" . 1)) ("f" . 2))))
     (let ((ecb-non-semantic-exclude-modes nil))
-      (should (eq (catch '--cl-block-nil-- (ecb-window-sync) 'completed)
-                  'completed)))))
+      (should (eq (condition-case nil
+                      (catch '--cl-block-nil-- (ecb-window-sync) 'completed)
+                    (error 'errored))
+                  'completed))
+      (should (member "f" (ecb-test-tree-buffer-node-names ecb-methods-buffer-name))))))
 
 (ert-deftest ecb-kill-buffer-hook-tolerates-non-file-buffers ()
   (ecb-test-with-ecb _proj

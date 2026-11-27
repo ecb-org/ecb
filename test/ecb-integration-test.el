@@ -126,7 +126,7 @@ click -> point jumps to the tag."
     (ecb-int-test-open proj "src/alpha.el")
     (let ((failed nil))
       (dolist (type '(left right top left-right))
-        (dolist (name (ecb-available-layouts-of-type type))
+        (dolist (name (ecb-test-usable-layouts type))
           (condition-case err
               (progn
                 (ecb-layout-switch name)

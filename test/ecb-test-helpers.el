@@ -391,5 +391,36 @@ Restores all customize-related symbol properties afterwards."
      ,@body
      ecb-test-call-log))
 
+;;; ----------------------------------------------------------------------
+;;; Emacs-version specific breakage (known ECB bugs, see PLAN.md)
+;;; ----------------------------------------------------------------------
+
+(defun ecb-test-speedbar-layout-broken-p ()
+  "Non-nil if ECB's speedbar integration cannot start in this Emacs.
+Since Emacs 31 `speedbar-set-timer' runs inside `speedbar-buffer', but
+`ecb-speedbar-activate' calls `speedbar-disable-update' before that buffer
+exists, so any layout containing the speedbar window errors while drawing.
+Probed at runtime rather than by version so the skip disappears when
+either side is fixed."
+  (require 'speedbar)
+  (let ((speedbar-buffer nil))
+    (condition-case nil
+        (progn (speedbar-set-timer nil) nil)
+      (error t))))
+
+(defun ecb-test-usable-layouts (&optional type)
+  "`ecb-available-layouts-of-type' minus layouts known to be broken here."
+  (let ((all (ecb-available-layouts-of-type type)))
+    (if (ecb-test-speedbar-layout-broken-p)
+        (remove "left-dir-plus-speedbar" all)
+      all)))
+
+(defun ecb-test-symbol-all-is-a-function-p ()
+  "Non-nil when this Emacs defines `all' as a function (Emacs >= 31).
+ECB's `ecb-other-window-behavior' defaults to the symbol `all' and
+`ecb-get-other-window' tests it with `functionp' first, so on such an
+Emacs `other-window' calls `all' with the wrong arguments."
+  (functionp 'all))
+
 (provide 'ecb-test-helpers)
 ;;; ecb-test-helpers.el ends here

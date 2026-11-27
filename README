@@ -167,7 +167,7 @@ explain the bug and they start failing-as-unexpected (i.e. passing) once
 the bug is fixed, at which point the marker should be removed.
 
 The GitHub Actions workflow .github/workflows/build.yml runs
-`make ecb autoloads test' on Emacs 29 and 30 for every push and pull
+`make ecb autoloads test' on Emacs 29, 30 and 31 for every push and pull
 request.
 
 -----

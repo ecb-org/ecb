@@ -78,6 +78,26 @@
         ((eq tree 'SPEEDBAR) ecb-speedbar-buffer-name)
         (t tree)))
 
+(defun ecb-layout-defs-test-usable-goldens ()
+  "Goldens for layouts that can be drawn in this Emacs (see
+`ecb-test-usable-layouts')."
+  (let ((usable (ecb-test-usable-layouts nil)))
+    (cl-remove-if-not (lambda (g) (member (car g) usable))
+                      ecb-layout-defs-test-goldens)))
+
+(ert-deftest ecb-layout-defs-speedbar-layout-draws ()
+  "Known bug (Emacs >= 31): `ecb-speedbar-activate' calls
+`speedbar-disable-update' before the speedbar buffer exists, and
+`speedbar-set-timer' now requires `speedbar-buffer', so the
+left-dir-plus-speedbar layout cannot be drawn."
+  :expected-result (if (ecb-test-speedbar-layout-broken-p) :failed :passed)
+  (ecb-test-with-ecb _proj
+    (ecb-layout-switch "left-dir-plus-speedbar")
+    (should (equal ecb-layout-name "left-dir-plus-speedbar"))
+    (should (equal (ecb-test-window-tree)
+                   (ecb-layout-defs-test-resolve
+                    (nth 2 (assoc "left-dir-plus-speedbar" ecb-layout-defs-test-goldens)))))))
+
 (ert-deftest ecb-layout-defs-golden-list-is-complete ()
   "Every registered layout has a golden and vice versa."
   (should (equal (sort (mapcar #'car ecb-layout-defs-test-goldens) #'string<)
@@ -90,7 +110,7 @@
 (ert-deftest ecb-layout-defs-all-layouts-render-to-golden-trees ()
   "Switch through every layout in one session and compare the window trees."
   (ecb-test-with-ecb _proj
-    (dolist (golden ecb-layout-defs-test-goldens)
+    (dolist (golden (ecb-layout-defs-test-usable-goldens))
       (ert-info ((format "layout %s" (car golden)))
         (ecb-layout-switch (car golden))
         (should (equal ecb-layout-name (car golden)))
@@ -106,7 +126,7 @@
 
 (ert-deftest ecb-layout-defs-each-layout-activates-from-scratch ()
   "Each layout can be the one ECB starts with."
-  (dolist (golden ecb-layout-defs-test-goldens)
+  (dolist (golden (ecb-layout-defs-test-usable-goldens))
     (ert-info ((format "layout %s" (car golden)))
       (ecb-test-with-temp-project proj
         (ecb-test-prepare-frame)
@@ -126,7 +146,7 @@
 (ert-deftest ecb-layout-defs-maximize-works-in-single-column-layouts ()
   "Maximizing is implemented for left, right and top layouts."
   (ecb-test-with-ecb _proj
-    (dolist (golden ecb-layout-defs-test-goldens)
+    (dolist (golden (ecb-layout-defs-test-usable-goldens))
       (unless (eq (cadr golden) 'left-right)
         (ert-info ((format "layout %s" (car golden)))
           (ecb-layout-switch (car golden))
@@ -143,7 +163,7 @@
   "`ecb-layout-define' deliberately ignores the windows-creator for
 left-right layouts, so maximizing leaves the window tree untouched."
   (ecb-test-with-ecb _proj
-    (dolist (golden ecb-layout-defs-test-goldens)
+    (dolist (golden (ecb-layout-defs-test-usable-goldens))
       (when (eq (cadr golden) 'left-right)
         (ert-info ((format "layout %s" (car golden)))
           (ecb-layout-switch (car golden))
@@ -167,7 +187,7 @@ does not exist."
 
 (ert-deftest ecb-layout-defs-hide-and-show-in-every-layout ()
   (ecb-test-with-ecb _proj
-    (dolist (golden ecb-layout-defs-test-goldens)
+    (dolist (golden (ecb-layout-defs-test-usable-goldens))
       (ert-info ((format "layout %s" (car golden)))
         (ecb-layout-switch (car golden))
         (ecb-hide-ecb-windows)
@@ -179,7 +199,7 @@ does not exist."
 (ert-deftest ecb-layout-defs-compile-window-in-every-layout ()
   (ecb-test-with-ecb _proj
     (ecb-test-with-compile-window
-      (dolist (golden ecb-layout-defs-test-goldens)
+      (dolist (golden (ecb-layout-defs-test-usable-goldens))
         (ert-info ((format "layout %s" (car golden)))
           (ecb-layout-switch (car golden))
           (should (ecb-compile-window-live-p))

@@ -223,10 +223,13 @@ grouped index the function exits non-locally with `no-catch'."
           (let ((ecb-non-semantic-exclude-modes nil))
             (setq-local imenu-create-index-function
                         (lambda () '(("Group" ("one" . 1) ("two" . 5)) ("flat" . 9))))
-            (should (eq (catch '--cl-block-nil--
-                          (ecb-get-tags-for-non-semantic-files)
-                          'completed)
-                        'completed)))
+            ;; `no-catch' throw on Emacs <= 30, `void-variable' error on 31
+            (should (equal (mapcar #'car
+                                   (condition-case nil
+                                       (catch '--cl-block-nil--
+                                         (ecb-get-tags-for-non-semantic-files))
+                                     (error nil)))
+                           '("Group" "flat"))))
         (kill-buffer)))))
 
 (ert-deftest ecb-get-tags-for-non-semantic-files-flat-imenu ()

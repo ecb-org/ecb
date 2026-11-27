@@ -15,9 +15,11 @@ and the test suite from step 0 passing.
 
 ## Step 0: Unit test proposal
 
-**Status: done (2026-11-26).** `test/` holds an ERT suite of 500 tests across
-16 files; `make test` runs it in about 30 s on Emacs 30.2, from source or
-from `.elc`. 24 tests are marked `:expected-result :failed`; each one
+**Status: done (2026-11-26, revalidated on Emacs 31.1 2026-11-27).** `test/`
+holds an ERT suite of 502 tests across 16 files; `make test` runs it in
+about 20-30 s on Emacs 30.2 and 31.1, from source or from `.elc`. 26 tests
+are marked `:expected-result :failed` (two of them only on Emacs >= 31,
+decided by a runtime probe rather than a version check); each one
 documents a real bug in its docstring and flips to an unexpected *pass* when
 the bug is fixed, so the suite stays green today and the fix steps below
 cannot regress silently.
@@ -28,7 +30,7 @@ cannot regress silently.
 | `ecb-util-test.el` | 51 | 2 |
 | `ecb-common-browser-test.el` | 39 | 3 |
 | `ecb-test.el` (activation, hooks, sync) | 27 | 1 |
-| `ecb-layout-test.el` / `ecb-layout-defs-test.el` | 48 / 9 | 2 / 1 |
+| `ecb-layout-test.el` / `ecb-layout-defs-test.el` | 49 / 10 | 3 / 2 |
 | `ecb-file-browser-test.el` | 55 | 2 |
 | `ecb-method-browser-test.el` | 51 | 0 |
 | `ecb-upgrade-test.el` | 47 | 1 |
@@ -75,6 +77,32 @@ Known-bug tests (grep `:expected-result :failed` for the full docstrings):
 - `ecb.el`: `ecb-find-file-hook` adds the self-removing
   `ecb-apply-default-tag-filter` to `post-command-hook` and deactivation
   never removes it.
+
+Found by revalidating on Emacs 31.1 (both are regressions caused by Emacs
+changes, and both hit users with default settings):
+
+- `ecb-layout`: `ecb-other-window-behavior` defaults to the symbol `all`
+  and `ecb-get-other-window` tests it with `functionp` before its
+  `cl-case`. Emacs 31 added a builtin function `all`, so `C-x o`
+  (`other-window`) signals `wrong-number-of-arguments` in every ECB session
+  until the user customizes the option. Fix: check the known symbols before
+  `functionp`, or rename the default. Promote to Step 2.
+- `ecb-speedbar`: `ecb-speedbar-activate` calls `speedbar-disable-update`
+  before the speedbar buffer exists; Emacs 31's `speedbar-set-timer` runs
+  inside `speedbar-buffer`, so the `left-dir-plus-speedbar` layout (and any
+  user layout with a speedbar window) fails to draw. Fix: create the buffer
+  first or guard the call. Promote to Step 2.
+
+Emacs 31 also changed `cl-block`'s expansion, so the `cl-return` bug in
+`ecb-get-tags-for-non-semantic-files` now surfaces as `void-variable`
+instead of `no-catch`; the tests assert the user-visible outcome (empty
+methods buffer) and are unaffected.
+
+Test-runner note: `test/run-tests.el` sets
+`native-comp-enable-subr-trampolines` to nil. Tests stub primitives with
+`cl-letf`, and on a native-comp Emacs that would JIT-compile a trampoline
+at test time, which needs a working C toolchain and is unrelated to what is
+being tested.
 
 Not covered by tests (needs a window system or third-party packages):
 mouse/popup handlers, image icons, the interactive drawing part of
@@ -511,7 +539,7 @@ The hand-run sweep made permanent:
 ## Step 1: CI
 
 **Status: done.** `.github/workflows/build.yml` runs on push to `master` and
-on pull requests, with a matrix of Emacs 29.4 and 30.1 via
+on pull requests, with a matrix of Emacs 29.4, 30.1 and 31.1 via
 `purcell/setup-emacs`. Each job does `make ecb autoloads` (hard byte-compile
 errors fail the job; warnings are printed but not fatal until step 5), then
 `make test` against the `.elc` files, then `make clean && make test` from

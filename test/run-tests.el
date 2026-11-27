@@ -17,6 +17,14 @@
 (setq debug-on-error nil)
 (setq load-prefer-newer t)
 
+;; Tests stub primitives such as `read-key-sequence' and `message' with
+;; `cl-letf'. On a native-comp Emacs that triggers on-the-fly compilation
+;; of a trampoline, which needs a working C toolchain at test time and is
+;; slow. Tests must not depend on that, so turn it off (Emacs >= 28 name
+;; and the pre-29 name).
+(setq native-comp-enable-subr-trampolines nil)
+(setq comp-enable-subr-trampolines nil)
+
 (defvar ecb-run-tests-dir
   (file-name-directory (or load-file-name buffer-file-name)))
 
