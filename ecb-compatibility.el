@@ -42,7 +42,8 @@
 (eval-when-compile
   (require 'silentcomp))
 
-
+(require 'master)
+(require 'view)
 (require 'ecb-util)
 (require 'ecb-common-browser)
 (require 'ecb-layout)
@@ -61,7 +62,7 @@
 
 ;; package bs.el ----------------------------------------------------------
 
-(defun ecb-advice-bs-show (&rest args)
+(defun ecb-ad-bs-show (&rest _args)
   "Ensures `bs-show' works well when called from another window as an
 edit-window. Does nothing if called in another frame as the `ecb-frame'."
   (when (equal (selected-frame) ecb-frame)
@@ -74,62 +75,99 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
                  ecb-compile-window-height)
         (display-buffer (buffer-name my-bs-buffer))))))
 
-(ecb-add-to-advice-set 'bs-show :before 'ecb-advice-bs-show 'ecb-compatibility-advices)
+(ecb-add-to-advice-set 'bs-show :before
+                       'ecb-ad-bs-show 'ecb-compatibility-advices)
 
 ;; package electric.el ------------------------------------------------------
 
-
-(defecb-advice one-window-p around ecb-always-disabled-advices
-  "If called for the `ecb-frame' it only returns not nil if there is exactly
-one edit-window. Neither the ecb-windows nor the compile-window nor the
-minibuffer-window are considered. This adviced version of `one-window-p' is
-not for direct usage therefore it's added to `ecb-always-disabled-advices' and
-therefore it's always disabled\; use the macro `ecb-with-ecb-advice' instead
-if you need this adviced version of `one-window-p'!"
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame))
-      (setq ad-return-value
-            (= (length (ecb-canonical-edit-windows-list)) 1))
-    ad-do-it))
-
-(defecb-advice Electric-pop-up-window around ecb-compatibility-advices
-  "Ensures that the electric-* commands \(e.g. `electric-buffer-list') work
-well with ECB. If BUFFER is a \"compilation-buffer\" in the sense of
-`ecb-compilation-buffer-p' then BUFFER will be displayed in the compile-window
-of ECB - if there is any. If the compile-window is temporally hidden then the
-BUFFER is displayed in an edit-window!"
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame))
-      (if (and (ecb-compilation-buffer-p (ad-get-arg 0))
-               (equal (ecb-compile-window-state) 'visible))
-          (pop-to-buffer (ad-get-arg 0))
-        (let ((ecb-compilation-buffer-names nil)
-              (ecb-compilation-major-modes nil)
-              (ecb-compilation-predicates nil))
-          (ecb-with-ecb-advice 'one-window-p 'around
-            ad-do-it)))
-    ad-do-it))
-
-(defecb-advice electric-command-history before ecb-compatibility-advices
+(defun ecb-ad-electric-command-history (&rest _args)
   "Ensures that the electric-* commands work well with ECB."
+  (if ecb-show-advice-messages
+      (message "Advice electric-command-history before function"))
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (ecb-point-in-dedicated-special-buffer))
     (ecb-select-edit-window)))
 
-(defecb-advice electric-buffer-list before ecb-compatibility-advices
+(ecb-add-to-advice-set 'electric-command-history :before
+                       'ecb-ad-electric-command-history 'ecb-compatibility-advices)
+
+(defun ecb-ad-electric-buffer-list-b (&rest _args)
   "Ensures that the electric-* commands work well with ECB."
+  (if ecb-show-advice-messages
+      (message "Advice electric-buffer-list before function"))
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (ecb-point-in-dedicated-special-buffer))
     (ecb-select-edit-window)))
 
-(defecb-advice electric-buffer-list after ecb-compatibility-advices
+(ecb-add-to-advice-set 'electric-buffer-list :before
+                       'ecb-ad-electric-buffer-list-b 'ecb-compatibility-advices)
+
+(defun ecb-ad-electric-buffer-list-a (&rest _args)
   "Ensures that the electric-* commands work well with ECB."
+  (if ecb-show-advice-messages
+      (message "Advice electric-buffer-list after function"))
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (if (ecb-buffer-obj "*Buffer List*")
         (bury-buffer (ecb-buffer-obj "*Buffer List*")))))
+
+(ecb-add-to-advice-set 'electric-buffer-list :after
+                       'ecb-ad-electric-buffer-list-a 'ecb-compatibility-advices)
+
+(defun ecb-ad-one-window-p (orig-fun &rest args)
+  "If called for the `ecb-frame' it only returns not nil if there is exactly
+one edit-window. Neither the ecb-windows nor the compile-window nor the
+minibuffer-window are considered. This adviced version of `one-window-p' is
+not for direct usage therefore it's added to `ecb-always-disabled-advices' and
+therefore it's always disabled; use the macro `ecb-with-ecb-advice' instead
+if you need this adviced version of `one-window-p'!"
+
+  (when ecb-show-advice-messages
+    (message "Advice one-window-p around function"))
+
+  (let ((result nil))
+
+  (if (and ecb-minor-mode (equal (selected-frame) ecb-frame))
+    (setq result (= (length (ecb-canonical-edit-windows-list)) 1))
+    (setq result (funcall orig-fun args)))
+  result))
+
+(ecb-add-to-advice-set 'one-window-p :around 'ecb-ad-one-window-p
+                       'ecb-always-disabled-advices)
+
+(defun ecb-ad-electric-pop-up-window (orig-fun &rest args)
+  "Ensures that the electric-* commands (e.g. `electric-buffer-list') work
+well with ECB. If BUFFER is a \"compilation-buffer\" in the sense of
+`ecb-compilation-buffer-p' then BUFFER will be displayed in the compile-window
+of ECB - if there is any. If the compile-window is temporally hidden then the
+BUFFER is displayed in an edit-window!"
+
+  (when ecb-show-advice-messages
+    (message "Advice Electric-pop-up-window around function"))
+
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame))
+    (if (and (ecb-compilation-buffer-p (nth 0 args))
+             (equal (ecb-compile-window-state) 'visible))
+      (pop-to-buffer (nth 0 args))
+
+      (let ((outmost-caller-p nil)
+            (ecb-compilation-buffer-names nil)
+            (ecb-compilation-major-modes nil)
+            (ecb-compilation-predicates nil))
+        (setq outmost-caller-p
+              (ecb-eval-with-advice 'one-window-p 'around
+                                    'ecb-ad-electric-pop-up-window))
+        (funcall orig-fun args)
+
+        (when outmost-caller-p
+          (ecb-disable-with-advice 'one-window-p 'around))))))
+
+(ecb-add-to-advice-set 'Electric-pop-up-window :around
+                       'ecb-ad-electric-pop-up-window
+                       'ecb-compatibility-advices)
 
 ;; package master.el
 
@@ -138,21 +176,27 @@ BUFFER is displayed in an edit-window!"
 ;; compile-window has been made visible), so <window> in the code below can be
 ;; a destroyed window-object! we have to prevent from this (e.g. by selecting
 ;; the window before by number).
-(defecb-advice master-says around ecb-compatibility-advices
- "Makes the function compatible with ECB."
- (if (or (not ecb-minor-mode)
+
+;; master-slave concepts, designate a master with M-x master-mode
+(defun ecb-ad-master-says (orig-fun &rest args)
+"Makes the function compatible with ECB."
+
+  (when ecb-show-advice-messages
+    (message "Advice master-says around function, orig : %s, args: :%S"
+             orig-fun args))
+
+  (if (or (not ecb-minor-mode)
          (not (equal (selected-frame) ecb-frame)))
-     (ecb-with-original-basic-functions ad-do-it)
+     (ecb-with-original-basic-functions args)
    (if (null (buffer-live-p (ecb-buffer-obj master-of)))
        (error "Slave buffer has disappeared")
      (let ((window  (selected-window))
-           (point-loc (ecb-where-is-point))
-           (p (point)))
+           (point-loc (ecb-where-is-point)))
        (if (not (eq (window-buffer window) (ecb-buffer-obj master-of)))
            (switch-to-buffer-other-window master-of))
-       (if (ad-get-arg 0)
+       (if (nth 0 args)
            (condition-case nil
-               (apply (ad-get-arg 0) (ad-get-arg 1))
+               (apply (nth 0 args) (nth 1 args))
              (error nil)))
        (select-window (cl-case (car point-loc)
                         (ecb
@@ -167,48 +211,61 @@ BUFFER is displayed in an edit-window!"
                          (ecb-get-window-by-number (cdr point-loc)))))
        (goto-char (point))))))
 
+(ecb-add-to-advice-set 'master-says :around
+                       'ecb-ad-master-says 'ecb-compatibility-advices)
+
 ;; package scroll-all.el --------------------------------------------------
 
-(defecb-advice scroll-all-function-all around ecb-compatibility-advices
+(defun ecb-ad-scroll-all-function-all (orig-fun &rest args)
   "Make it compatible with ECB."
+
+  (when ecb-show-advice-messages
+    (message "Advice scroll-all-function-all around function, orig : %s, args: :%S"
+             orig-fun args))
+
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame)))
-      (ecb-with-original-basic-functions ad-do-it)
+      (ecb-with-original-basic-functions args)
     (let (;; This runs the `other-window'-calls in the body in the right mode
           (ecb-other-window-behavior 'only-edit))
       ;; return the current number of edit-windows if point is in an edit-window
       ;; and always return 1 if point is not in an edit-window.
-      (cl-flet ((count-windows (&optional minibuf)
-                            (if (ecb-point-in-edit-window-number)
-                                (length (ecb-canonical-edit-windows-list))
-                              1)))
-        ad-do-it))))
+      (cl-flet ((count-windows ()
+                  (if (ecb-point-in-edit-window-number)
+                      (length (ecb-canonical-edit-windows-list))
+                    1)))
+        (funcall orig-fun args)))))
 
+(ecb-add-to-advice-set 'scroll-all-function-all :around
+                       'ecb-ad-scroll-all-function-all 'ecb-compatibility-advices)
 
 ;; package tmm.el --------------------------------------------------------
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
-;; Electric-pop-up-window advice instaed of this advice because otherwise
+;; Electric-pop-up-window advice instead of this advice because otherwise
 ;; some commands of the popup-menus of the ecb-buffers would not work - this
 ;; comes from the save-window-excursion in the the tmm.
-(defecb-advice tmm-prompt around ecb-compatibility-advices
+
+(defun ecb-ad-tmm-prompt (orig-fun &rest args)
  "Make it compatible with ECB."
  (if (or (not ecb-minor-mode)
          (not (equal (selected-frame) ecb-frame)))
-     (ecb-with-original-basic-functions ad-do-it)
+     (ecb-with-original-basic-functions args)
    ;; we set temporally `ecb-other-window-behavior' to a function which
    ;; always selects the "next" window after the
    ;; `ecb-last-edit-window-with-point'
    (let ((ecb-other-window-behavior
-          (lambda (win-list edit-win-list ecb-win-list comp-win
-                            mini-win point-loc nth-win)
+          (lambda (edit-win-list)
             (ecb-next-listelem edit-win-list
                                ecb-last-edit-window-with-point)))
          ;; we must not handle the tmm-stuff as compilation-buffer
          (ecb-compilation-buffer-names nil)
          (ecb-compilation-major-modes nil)
          (ecb-compilation-predicates nil))
-     ad-do-it)))
+     (funcall orig-fun args))))
+
+(ecb-add-to-advice-set 'tmm-prompt :around
+                       'ecb-ad-tmm-prompt 'ecb-compatibility-advices)
 
 ;; ediff-stuff ---------------------------------------------------------------
 
@@ -303,31 +360,38 @@ does all necessary after finishing ediff."
 ;; one will be the deleted one...how to go back to that window we have to go
 ;; back??
 
-(defecb-advice view-mode-exit around ecb-compatibility-advices
+(defun ecb-ad-view-mode-exit (orig-fun &rest args)
  "Makes view-mode compatible with ECB.
 
-If there is no compile-window \(i.e. the buffer with view-mode is not
+If there is no compile-window (i.e. the buffer with view-mode is not
 displayed in the special compile-window of ECB) then nothing special is done
 but the original `view-mode-exit' is performed.
 
-If the view-buffer is displayed in the compile-window \(i.e. this function is
+If the view-buffer is displayed in the compile-window (i.e. this function is
 called from within the compile-window) then the whole window-management stuff
 of view-mode is disabled only `view-no-disable-on-exit' is taken into acount.
 
 The compile-window will be shrinked down with
 `ecb-toggle-compile-window-height' and the last edit-window with point will be
 selected afterwards."
+
+  (when ecb-show-advice-messages
+      (message "Advice view-mode-exit around function"))
+
  (if (and (boundp 'ecb-minor-mode)
           ecb-minor-mode
           (eq (selected-frame) ecb-frame)
           (eq (selected-window) ecb-compile-window))
      (when view-mode
        (or view-no-disable-on-exit
-           (view-mode-disable))
+           (view-mode -1))
        (force-mode-line-update)
        (ecb-toggle-compile-window-height -1)
        (select-window ecb-last-edit-window-with-point))
-   ad-do-it))
+   (funcall orig-fun args)))
+
+(ecb-add-to-advice-set 'view-mode-exit :around
+                       'ecb-ad-view-mode-exit 'ecb-compatibility-advices)
 
 (defmacro ecb-ad-with-originals (functions &rest body)
   "Binds FUNCTIONS to their original definitions and execute BODY.

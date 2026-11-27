@@ -192,7 +192,7 @@
 ;; Variables
 ;;====================================================
 
-; TODO : leo insert error object variable
+; TODO : tec-leo insert error object variable
 (defvar ecb-error-object nil
   "Error object which contains the the error in a condition-case")
 
@@ -1322,7 +1322,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
                 ;; after the option-display and would so hide this buffer.
                 (ecb-run-with-idle-timer 0.25 nil 'ecb-display-upgraded-options)
             t)
-; TODO: leo - test (ecb-display-news-for-upgrade))
+; TODO: tec-leo - test (ecb-display-news-for-upgrade))
 
           (error
            (ecb-clean-up-after-activation-failure

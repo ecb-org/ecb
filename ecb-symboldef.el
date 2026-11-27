@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; ecb-symboldef.el --- ECB window for symbol-definition or documentation
 
 ;;; Copyright (C) 2005 Hauke Jans
@@ -53,8 +54,6 @@
 (eval-when-compile
   (require 'silentcomp))
 
-;; XEmacs-stuff
-(silentcomp-defun find-tag-internal)
 ;; Emacs stuff
 (silentcomp-defun find-tag-noselect)
 
@@ -232,36 +231,19 @@ could slow down dramatically!"
         default-function
         'ecb-symboldef-find-null)))
 
-(defun ecb-symboldef-find-null (symbol-name edit-buffer)
+(defun ecb-symboldef-find-null (_symbol-name _edit-buffer)
+; variables with underscore means they are not used, avoids warnings
   "Empty symbol-definition find function.
 Only prints mode and info but does not find any symbol-definition."
   (let ((symboldef-window-height (ecb-window-full-height
                                   (get-buffer-window (current-buffer)))))
-    (dotimes (i (/ symboldef-window-height 2)) (insert "\n"))
+    (cl-loop repeat (/ symboldef-window-height 2) do (insert "\n"))
     (insert  "*  No symbol definition function for current mode *\n"
              "*  See variable `ecb-symboldef-find-functions' *")))
 
 ;; --------------- code for finding the elisp docu -----------------------------
 
 (defconst ecb-symboldef-temp-buffer-name " *ecb-symboldef-temp-buffer")
-
-;; currently not used
-(defun ecb-symboldef-get-doc-for-fsymbol (fsymbol edit-buffer)
-  "Returns the full output of `describe-function' as string without any
-sideeffect to the help-system of Emacs.
-FSYMBOL is the symbol for which the doc-string should be returned and
-EDIT-BUFFER is that buffer FSYMBOL is used."
-  ;; by binding standard-output to a special buffer we can force
-  ;; describe-function-1 to print all its output to this buffer.
-  (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
-        (doc-string nil))
-    (with-current-buffer standard-output
-      ;;(insert (symbol-name symbol))
-      (describe-function-1 fsymbol)
-      (setq doc-string (buffer-string)))
-    (kill-buffer standard-output)
-    doc-string))
-
 
 (defun ecb-symboldef-get-doc-for-vsymbol (vsymbol edit-buffer)
   "Returns the full output of `describe-variable' as string without any
@@ -273,9 +255,9 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
   ;; doc in a help-window, so we have to redirect the output. Possible but
   ;; there is something to do:
   ;; 0. making edit-buffer (s. arg) current
-  ;; 1. For Emacs: redefining help-buffer so it returns a buffer which is
-  ;;    suitable for us. For XEmacs help-buffer-name analogous
-  ;; 2. For (X)Emacs: Setting temp-buffer-show-function temporally to
+  ;; 1. redefining help-buffer so it returns a buffer which is
+  ;;    suitable for us.
+  ;; 2. Setting temp-buffer-show-function temporally to
   ;;    something special which does simply nothing
   ;; 3. setting temp-buffer-setup-hook to nil
   ;; 3. Binding standart-output to a temporally buffer-object
@@ -284,17 +266,12 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
     (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
           (temp-buffer-setup-hook nil)
           ;; this does not call temp-buffer-show-hook!!!
-          (temp-buffer-show-function (function (lambda (b) nil))))
+          (temp-buffer-show-function (function (lambda () nil))))
       (cl-flet ((help-buffer () ecb-symboldef-temp-buffer-name)
-             ;; (print-help-return-message (&optional function) nil)
-             ;; for XEmacs
              (help-buffer-name () ecb-symboldef-temp-buffer-name))
-        (cl-labels ((print-help-return-message (&optional function) nil))
+        (cl-labels ((print-help-return-message nil))
           (describe-variable vsymbol)))))
   (with-current-buffer ecb-symboldef-temp-buffer-name
-    (when (member 'eieio-help-mode-augmentation-maybee temp-buffer-show-hook)
-      (let ((major-mode 'help-mode))
-        (eieio-help-mode-augmentation-maybee)))
     (buffer-string)))
 
 (silentcomp-defun function-at-point)
@@ -331,8 +308,7 @@ list containing point.  If that doesn't give a function, return nil."
   (let ((symbol (intern symbol-name))
         (fsymbol nil)
         (begin-vdoc (point-min))
-        (retval nil)
-        (args nil))
+        (retval nil))
     ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make an option how to deal
     ;; with function-symbols:
     ;; - always display only if symbol under point is a function
@@ -507,9 +483,9 @@ Returns nil if not found otherwise a list \(tag-buffer tag-begin tag-end)"
       (if mytag-buf
           (list mytag-buf mytag-min mytag-max)))))
 
-(defun ecb-symboldef-find-tag-by-etags (symbol-name edit-buffer)
+(defun ecb-symboldef-find-tag-by-etags (symbol-name)
   "Try to find the definition of SYMBOL-NAME via etags.
-Returns nil if not found otherwise a list \(tag-buffer tag-begin tag-end)
+Returns nil if not found otherwise a list (tag-buffer tag-begin tag-end)
 whereas tag-end is currently always nil."
 
   (let* ((result-buf (ignore-errors (find-tag-noselect symbol-name)))
@@ -519,7 +495,7 @@ whereas tag-end is currently always nil."
     (if result-buf
         (list result-buf result-point nil))))
 
-(defun ecb-symboldef-find-definition (symbol-name edit-buffer)
+(defun ecb-symboldef-find-definition (symbol-name)
   "Inserts the definition of symbol with name SYMBOL-NAME.
 Fill the upper-half of the special ecb-window with text preceding the
 symbol-definition in the definition-file. First tries to find the definition
@@ -527,8 +503,8 @@ with semanticdb and then - if no success - with current etags-file."
   (let* ((symboldef-window-height (ecb-window-full-height
                                    (get-buffer-window (current-buffer))))
          ;; first lookup via semnaticdb, then via etags:
-         (result (or (ecb-symboldef-find-tag-by-semanticdb symbol-name edit-buffer)
-                     (ecb-symboldef-find-tag-by-etags symbol-name edit-buffer)
+         (result (or (ecb-symboldef-find-tag-by-semanticdb symbol-name (current-buffer))
+                     (ecb-symboldef-find-tag-by-etags symbol-name)
                      (list nil nil nil)))
          (num-tag-lines (- (/ symboldef-window-height 2) 0))
          (tag-buf (nth 0 result))
@@ -616,7 +592,7 @@ this window dedicated for this buffer."
 (defun ecb-maximize-window-symboldef ()
   "Maximize the ECB-symbol-defnition window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+edit-window\(s) are visible (and maybe a compile-window). Works also if the
 ECB-symboldefinition-window is not visible in current layout."
   (interactive)
   (ecb-maximize-ecb-buffer ecb-symboldef-buffer-name t))

@@ -1,0 +1,9 @@
+.github
+*.elc
+*~
+/TAGS
+/html-help/
+/info-help/
+/ecb-autoloads.el
+/ecb-compile-script
+Makefile.conf

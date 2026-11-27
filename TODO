@@ -1,3 +1,5 @@
+- remove escreen support
+
 - decide if ecb should use lexical binding
 
 - a lot of warning must be solved

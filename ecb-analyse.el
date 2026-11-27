@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; ecb-analyse.el --- ECB analysis display window
 
 ;;; Copyright (C) 2004 - 2005 Klaus Berndl
