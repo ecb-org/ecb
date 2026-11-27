@@ -1,15 +1,25 @@
 # ECB Modernization Plan
 
-Status as of 2026-11-26, based on byte-compiling and batch-running ECB 2.52
-under GNU Emacs 30.2.
+Status as of 2026-11-27. Steps 0 and 1 are done on branch `ecb-improvements`
+(test-suite plus CI, no changes to ECB itself yet). Steps 2 onward are the
+fix work and have been re-planned from the findings of the suite.
 
-Baseline: all 33 files byte-compile with no errors (116 warnings), autoloads
-generate, `ecb-activate`/`ecb-deactivate` work, all 26 built-in layouts switch
-cleanly, and `ecb-advice-test.el` produces its expected transcript.
+Baseline: all 33 files byte-compile with no errors (116 warnings) on Emacs
+30.2 and 31.1, autoloads generate, `ecb-activate`/`ecb-deactivate` work, and
+`make test` reports 502 tests with 0 unexpected results on both versions.
+25 of the 26 built-in layouts draw on Emacs 31 (see Step 2 for the one that
+does not).
 
 The steps below are ordered so that each one is independently reviewable and
-leaves the tree green. Every step ends with `make ecb autoloads` on Emacs 30
-and the test suite from step 0 passing.
+leaves the tree green. Every step ends with `make ecb autoloads test` green
+in CI on Emacs 29, 30 and 31.
+
+How a fix lands: each bug in the ledger has a test marked
+`:expected-result :failed`. The fix PR changes the code, removes the marker
+(the test then passes as a normal test), and updates the ledger in Step 0.
+A PR that fixes a bug without flipping its test is incomplete; a PR whose
+fix flips a test it did not intend to has found a second bug or a coupling
+and needs a look before merging.
 
 ---
 
@@ -42,7 +52,8 @@ cannot regress silently.
 | `ecb-misc-modules-test.el` (help, face, tod, speedbar, compatibility, winman, create-layout, buffertab, multiframe, jde, eshell, wrappers, autogen) | 44 | 6 |
 | `ecb-integration-test.el` | 12 | 1 |
 
-Known-bug tests (grep `:expected-result :failed` for the full docstrings):
+Known-bug tests (grep `:expected-result :failed` for the full docstrings;
+each is assigned to a fix in Step 2 or Step 3):
 
 - `ecb-help`: `ecb-problem-report-list-all-variables` uses the removed
   `user-variable-p` (Step 2).
@@ -85,13 +96,11 @@ changes, and both hit users with default settings):
   and `ecb-get-other-window` tests it with `functionp` before its
   `cl-case`. Emacs 31 added a builtin function `all`, so `C-x o`
   (`other-window`) signals `wrong-number-of-arguments` in every ECB session
-  until the user customizes the option. Fix: check the known symbols before
-  `functionp`, or rename the default. Promote to Step 2.
+  until the user customizes the option (Step 2, item 1).
 - `ecb-speedbar`: `ecb-speedbar-activate` calls `speedbar-disable-update`
   before the speedbar buffer exists; Emacs 31's `speedbar-set-timer` runs
   inside `speedbar-buffer`, so the `left-dir-plus-speedbar` layout (and any
-  user layout with a speedbar window) fails to draw. Fix: create the buffer
-  first or guard the call. Promote to Step 2.
+  user layout with a speedbar window) fails to draw (Step 2, item 4).
 
 Emacs 31 also changed `cl-block`'s expansion, so the `cl-return` bug in
 `ecb-get-tags-for-non-semantic-files` now surfaces as `void-variable`
@@ -518,9 +527,15 @@ The hand-run sweep made permanent:
   `ecb-method-browser`, `ecb-upgrade`, then the rest in step order.
 - Golden outputs (tree lines, window trees) are stored as data under
   `test/golden/` with a `make test-update-golden` target that regenerates
-  them; a regenerated diff must be reviewed like code.
+  them; a regenerated diff must be reviewed like code. *(As built: the
+  goldens are inline constants in the test files, e.g.
+  `ecb-layout-defs-test-goldens`; small enough that a separate directory
+  and regeneration target were not worth it.)*
 - Tests run on Emacs 29 and 30 from day one (step 1 matrix); anything that
-  only passes on one version is a bug or a test bug, not a skip.
+  only passes on one version is a bug or a test bug, not a skip. *(As
+  built: 29, 30 and 31. Version-specific bugs are expressed as
+  `:expected-result` computed from a runtime probe, never from
+  `emacs-version`.)*
 
 ### Known constraints
 
@@ -538,7 +553,7 @@ The hand-run sweep made permanent:
 
 ## Step 1: CI
 
-**Status: done.** `.github/workflows/build.yml` runs on push to `master` and
+**Status: done.** `.github/workflows/build.yml` runs on push to `main` and
 on pull requests, with a matrix of Emacs 29.4, 30.1 and 31.1 via
 `purcell/setup-emacs`. Each job does `make ecb autoloads` (hard byte-compile
 errors fail the job; warnings are printed but not fatal until step 5), then
@@ -546,29 +561,113 @@ errors fail the job; warnings are printed but not fatal until step 5), then
 source. `scorecard.yml` is unchanged.
 
 Follow-ups once the first run is green:
-- Consider adding `snapshot` to the matrix as a non-blocking job.
+- The matrix has only been exercised locally on 30.2 and 31.1; the first PR
+  run is the first 29.4 result. If 29.4 differs, fix the test or add a
+  runtime-probed expected failure as was done for Emacs 31; do not skip by
+  version number.
+- Consider adding `snapshot` to the matrix as a non-blocking job. The Emacs
+  31 `all` regression shows that new builtins can break ECB silently, and a
+  snapshot job would have caught it months earlier.
 - `ecb-advice-test.el` was removed from `ecb_LISP_EL` in `ecb-makedef.mk`
   because its scenario now lives in `test/ecb-advice-scenario-test.el`; the
   file itself can be deleted in step 6.
 
-## Step 2: Fix the two confirmed crashes
+## Step 2: Fix the user-visible breakages
 
-- `ecb-help.el:389` — `user-variable-p` was removed from Emacs; use
-  `custom-variable-p`. Breaks `ecb-submit-problem-report`.
-- `ecb-layout.el:3553`, `:3623`, `:3662` — `ecb-window-select` takes a
-  buffer-or-name but is passed the window object `ecb-compile-window`.
-  Crashes any maximize of an ECB window while point is in the compile
-  window. Fix with one shared helper used at all three sites.
-- Both have tests from step 0 that fail before and pass after.
+Everything here either crashes, silently loses data, or disables a core
+feature under default settings. One PR per bullet; each flips the named
+test(s). Suggested order is by how many users hit it.
 
-## Step 3: Small defcustom / constant-list fixes
+1. **`other-window` broken on Emacs 31** (`ecb-layout.el`,
+   `ecb-get-other-window`). `ecb-other-window-behavior` defaults to the
+   symbol `all`; the code checks `(functionp behavior)` before its
+   `cl-case`, and Emacs 31 defines a builtin `all`. Reorder the dispatch so
+   the known symbols are matched first and only then fall back to
+   `functionp`. Audit the other symbol-valued options tested with
+   `functionp`/`fboundp` (`ecb-windows-hidden-all-value` is `'all` too).
+   Test: `ecb-other-window-cycles-through-edit-and-ecb-windows`.
+2. **Methods buffer empty for grouped imenu** (`ecb-method-browser.el`,
+   `ecb-get-tags-for-non-semantic-files`). `cl-return` inside a plain
+   `dolist`; use `cl-dolist` or `cl-block`. Affects every non-semantic mode
+   whose imenu produces groups (Ruby, Makefile, shell, elisp without
+   semantic). Tests: `ecb-window-sync-non-semantic-buffer-with-imenu-groups`,
+   `ecb-get-tags-for-non-semantic-files-with-grouped-imenu`.
+3. **Maximize from the compile window crashes** (`ecb-layout.el:3553`,
+   `:3623`, `:3662`). `ecb-window-select` is passed the window object
+   `ecb-compile-window`; introduce one helper used at all three sites.
+   Tests: `ecb-window-select-with-window-object`,
+   `ecb-maximize-with-compile-window-from-compile-window`.
+4. **Speedbar layouts fail on Emacs 31** (`ecb-speedbar.el`,
+   `ecb-speedbar-activate`). `speedbar-disable-update` is called before the
+   speedbar buffer exists and `speedbar-set-timer` now needs it. Create or
+   check the buffer first. Test: `ecb-layout-defs-speedbar-layout-draws`.
+5. **`ecb-compilation-predicates` never work** (`ecb-compilation.el`,
+   `ecb-compilation-buffer-p`). The predicate branch is a `dolist` with no
+   result form, so it always returns nil, and a lambda entry errors on
+   `fboundp`. Use `cl-some` and accept any `functionp`. Tests:
+   `ecb-compilation-buffer-p-by-predicate-symbol`,
+   `ecb-compilation-buffer-p-accepts-lambda-predicates`.
+6. **Navigation history loses its tail** (`ecb-navigate.el`,
+   `ecb-nav-remove-node`). Removing a middle node drops every node after
+   it. Test: `ecb-nav-remove-middle-node-keeps-tail`.
+7. **`ecb-submit-problem-report` crashes** (`ecb-help.el:389`).
+   `user-variable-p` no longer exists; use `custom-variable-p`. Test:
+   `ecb-help-problem-report-list-all-variables`.
+8. **Compile window removed at startup** when
+   `ecb-split-edit-window-after-start` is set (`ecb-layout.el`). Test:
+   `ecb-compile-window-survives-split-edit-window-after-start`.
+9. **Hook leaks across deactivation** (`ecb.el`, `ecb-find-file-hook`).
+   Remove `ecb-apply-default-tag-filter` from `post-command-hook` in
+   `ecb-deactivate-internal`. Test:
+   `ecb-int-deactivate-removes-default-tag-filter-hook`.
+10. **`ecb-autogen.el` clobbers `find-file-hook`** at load time. Delete the
+    top-level `set`. Test: `ecb-autogen-does-not-install-find-file-hook`.
 
-- `ecb-face.el:155` — `ecb-sources-general-face` has two `:type` keywords;
-  drop the stray `:type 'face`.
-- `ecb-buffertab.el:69` — `ecb-buffertab-map` is a `defcustom` holding a
-  keymap with no `:type`; make it a `defvar`.
-- `ecb-help.el:365-391` — `sort`/`delete` on quoted literal lists; build
-  them with `list` or copy first.
+## Step 3: Small correctness fixes
+
+Each is a few lines and has a test; batch into two or three PRs by file.
+
+- `ecb-util.el`: `ecb-some` ignores sequences after the first
+  (`ecb-some-with-multiple-sequences`); `ecb-merge-face-into-text` never
+  applies the face (`ecb-merge-face-into-text-adds-face`).
+- `ecb-common-browser.el`: `ecb-add-to-advice-set` validates the class after
+  mutating the set, and the error message prints the literal symbol
+  `advice-class` (`ecb-add-to-advice-set-rejects-illegal-class-without-mutating`);
+  `ecb-enable-ecb-advice` logs "Advice enable" on every call
+  (`ecb-enable-ecb-advice2-does-not-spam-messages`). These two can instead
+  be folded into the first Step 4 PR.
+- `ecb-file-browser.el`: `ecb-cache-directory-contents-not` should accept
+  the documented list of regexps
+  (`ecb-cache-directory-contents-not-accepts-regexp-list`); unsorted
+  history should be most-recent-first as documented
+  (`ecb-history-unsorted-is-most-recent-first`).
+- `ecb-layout-defs.el`: left-right layouts report an inconsistent maximize
+  state (`ecb-layout-defs-maximize-state-consistent-in-left-right-layouts`).
+- `ecb-navigate.el`: `ecb-nav-dump-history` calls `int-to-string` on the
+  sentinel's string position (`ecb-nav-dump-history-lists-items`);
+  `ecb-nav-jump-to-tag` passes an invalid `:tag` initarg (unused today,
+  will error under stricter eieio).
+- `ecb-upgrade.el`: `ecb-upgrade-layout-nr2name` maps 20 to "speedbar1";
+  should be "left-dir-plus-speedbar"
+  (`ecb-upgrade-layout-nr-20-maps-to-missing-layout`).
+- `ecb-symboldef.el`: `ecb-symboldef-get-doc-for-vsymbol` returns ""
+  (`ecb-symboldef-get-doc-for-vsymbol`).
+- `ecb-semantic-wrapper.el`: `semantic-tag-type-superclass` should be the
+  plural `semantic-tag-type-superclasses`
+  (`ecb-semantic-wrapper-alist-has-no-stale-entries`).
+- `ecb-buffertab.el`: `add-to-list`'s APPEND argument is outside the call
+  (`ecb-buffertab-make-menu-is-a-valid-keymap`); `ecb-buffertab-map` is a
+  `defcustom` holding a keymap, make it a `defvar`.
+- `ecb-multiframe.el`: free variable `frame` in
+  `ecb-multiframe-setup-buffer-name`
+  (`ecb-multiframe-setup-buffer-name-references-unbound-frame`). This
+  module also redefines `ecb-deactivate-internal` at load time; decide
+  whether to keep it at all (see Step 6).
+- `ecb-face.el:155`: `ecb-sources-general-face` has two `:type` keywords.
+- `ecb-help.el:365-391`: `sort`/`delete` on quoted literal lists.
+- `ecb-method-browser.el`: the docstring of
+  `ecb-non-semantic-parsing-function` says a function; the code requires a
+  symbol (`fboundp`). Either accept lambdas or fix the docstring.
 
 ## Step 4: Finish the advice migration (bulk of the work; one PR per file)
 
@@ -586,8 +685,14 @@ Follow-ups once the first run is green:
 - `ecb-with-original-adviced-function-set` and `ecb-with-ecb-advice` must
   keep handling both entry formats until the last file is converted; the
   mixed-format test from step 0 is the gate.
-- Then delete `defecb-advice` and the legacy branch of `ecb-enable-ecb-advice`,
-  and port `ecb-advice-test.el` fully to the new mechanism.
+- Then delete `defecb-advice` and the legacy branch of `ecb-enable-ecb-advice`.
+  `ecb-advice-test.el` is already ported (`test/ecb-advice-scenario-test.el`
+  replays Klaus Berndl's manual scenario and asserts the exact event order);
+  the original file can be deleted at that point.
+- The suite gives this step real coverage: `ecb-test-advised-p` checks after
+  every activation/deactivation, the advice-set registry tests, and the
+  integration test that activates three times and asserts no advices or
+  hooks remain. Run `make test-file FILE=common-browser` after each file.
 
 ## Step 5: Lexical binding and dead code
 
@@ -611,8 +716,12 @@ Follow-ups once the first run is green:
 ## Step 6: Repo hygiene
 
 - Delete `make.bat` (hardcoded to Emacs 22.3 and self-described as unusable),
-  `ecb2/` (unfinished `jn-*` rewrite), and the obsolete `html/` site; update
-  `TODO` / `TODO.org`.
+  `ecb2/` (unfinished `jn-*` rewrite), the obsolete `html/` site, and
+  `ecb-advice-test.el` (ported to `test/`); update `TODO` / `TODO.org`.
+- Decide the fate of `ecb-multiframe.el`: it is not required by `ecb.el`,
+  redefines `ecb-deactivate-internal` to a no-op at load time, and its own
+  header says deactivation is unsupported. Either remove it or move it to a
+  clearly experimental `contrib/` with a load-time warning.
 - `ecb-show-help`: point the user at `make online-help` instead of a bare
   "does not exist" error.
 - `ecb-expand-directory-nodes`: warn (or require confirmation) when the root
@@ -622,11 +731,10 @@ Follow-ups once the first run is green:
 
 ## Sizing
 
-- Step 0: the P1 subset (helpers, `tree-buffer`, `ecb-util`, advice
-  machinery, `ecb.el`, integration sweep) is roughly a week of focused work;
-  the full P1 list including layout/file/method browsers is several weeks and
-  can proceed in parallel with steps 1-3 as long as the P1 subset lands
-  first.
-- Steps 1-3: an evening, one or two PRs.
+- Steps 0-1: done.
+- Step 2: ten small PRs; each fix is under 20 lines, the work is in reading
+  the surrounding code. Items 1 and 2 first since they affect default
+  configurations on current Emacs.
+- Step 3: two or three PRs batched by file, an evening.
 - Step 4: several PRs over a few weeks.
 - Steps 5-6: incremental, can trail behind.
