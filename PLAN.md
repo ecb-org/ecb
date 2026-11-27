@@ -572,7 +572,12 @@ Follow-ups once the first run is green:
   because its scenario now lives in `test/ecb-advice-scenario-test.el`; the
   file itself can be deleted in step 6.
 
-## Step 2: Fix the user-visible breakages
+## Step 2: Fix the known-bug tests, part 1 (user-visible breakages)
+
+Steps 2 and 3 together clear every `:expected-result :failed` marker in the
+suite (26 as of Emacs 31.1); when both are done, `make test` should report
+"0 expected failures". They are split only by severity so the worst bugs
+ship first.
 
 Everything here either crashes, silently loses data, or disables a core
 feature under default settings. One PR per bullet; each flips the named
@@ -623,9 +628,10 @@ test(s). Suggested order is by how many users hit it.
 10. **`ecb-autogen.el` clobbers `find-file-hook`** at load time. Delete the
     top-level `set`. Test: `ecb-autogen-does-not-install-find-file-hook`.
 
-## Step 3: Small correctness fixes
+## Step 3: Fix the known-bug tests, part 2 (remaining ledger)
 
 Each is a few lines and has a test; batch into two or three PRs by file.
+Finishing this step closes the ledger from Step 0.
 
 - `ecb-util.el`: `ecb-some` ignores sequences after the first
   (`ecb-some-with-multiple-sequences`); `ecb-merge-face-into-text` never
