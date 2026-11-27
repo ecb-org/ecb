@@ -1,5 +1,8 @@
 ;;; ecb-misc-modules-test.el --- tests for the smaller ECB modules -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Covers the modules that have little batch-testable surface of their

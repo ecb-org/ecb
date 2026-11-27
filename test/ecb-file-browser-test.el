@@ -1,5 +1,8 @@
 ;;; ecb-file-browser-test.el --- tests for ecb-file-browser.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Directories, sources and history buffers against the project-a fixture:

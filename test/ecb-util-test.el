@@ -1,5 +1,8 @@
 ;;; ecb-util-test.el --- tests for ecb-util.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Pure helpers in ecb-util.el: list/sequence utilities, string helpers,

@@ -1,5 +1,8 @@
 ;;; ecb-symboldef-test.el --- tests for ecb-symboldef.el and ecb-analyse.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; The two semantic-analyzer driven ECB buffers: the symbol-definition

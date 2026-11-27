@@ -14,6 +14,16 @@ The steps below are ordered so that each one is independently reviewable and
 leaves the tree green. Every step ends with `make ecb autoloads test` green
 in CI on Emacs 29, 30 and 31.
 
+AI policy (applies to every PR from here on): MELPA permits AI-assisted
+code but requires the human author to be the first and most thorough
+reviewer and asks for a Linux-style `;; Assisted-by: AGENT:MODEL` line under
+the `;; Author:` line of each file containing AI-generated code. Every file
+in `test/` carries one. Any fix PR in which an assistant touched a shipped
+`.el` file must add the line to that file, and the PR description must say
+so. Note that GNU Emacs itself rejects LLM-generated contributions, so none
+of this work can be offered upstream to Emacs/CEDET without a clean-room
+rewrite.
+
 How a fix lands: each bug in the ledger has a test marked
 `:expected-result :failed`. The fix PR changes the code, removes the marker
 (the test then passes as a normal test), and updates the ledger in Step 0.
@@ -565,6 +575,9 @@ source. `scorecard.yml` is unchanged.
 Follow-ups once the first run is green:
 - If a future Emacs differs, fix the test or add a runtime-probed expected
   failure as was done for Emacs 31; do not skip by version number.
+- Add a non-blocking `lint` job now so Step 7 has a baseline: `package-lint`
+  on every shipped `.el`, `checkdoc`, and byte-compile with
+  `byte-compile-error-on-warn`. Promote it to blocking as Step 5/7 progress.
 - Consider adding `snapshot` to the matrix as a non-blocking job. The Emacs
   31 `all` regression shows that new builtins can break ECB silently, and a
   snapshot job would have caught it months earlier.
@@ -735,6 +748,47 @@ Finishing this step closes the ledger from Step 0.
 
 ---
 
+## Step 7: MELPA compliance
+
+ECB is on MELPA today only because a maintainer added a recipe for it
+(`recipes/ecb`, `:fetcher github :repo "ecb-org/ecb"`,
+`:files ("*.el" "ecb-images" "ecb2" "ecb.texi")`). It would not pass the
+current submission checklist in `CONTRIBUTING.org`, and the recipe itself
+ships the unfinished `ecb2/` directory. This step makes ECB pass every item
+as if it were a new submission, so the listing rests on merit and MELPA
+stable gets a real release.
+
+Checked against the repo on 2026-11-27; status of each MELPA requirement:
+
+| Requirement | Status | Fix |
+|---|---|---|
+| GPL-compatible license, `COPYING`/`LICENSE` detectable by `licensee` | `COPYING` is GPLv2 with an 11-line ECB preamble; headers say "version 2, or (at your option) any later version" | Replace `COPYING` with the verbatim GPL text (v2 or, better, v3 with headers updated to match) so `licensee` detects it; keep the preamble in README |
+| License boilerplate above `;;; Commentary` in every file | Present in the 33 shipped files | Verify in the lint job (`package-lint` checks it) |
+| `package.el` metadata in the main file | `ecb.el` has `Author`, `Maintainer` (Klaus Berndl, inactive since 2009), `Keywords`, `Created`; **no `Version`, `Package-Requires`, or `URL`** | Add `;; Version: 2.53` (next release), `;; Package-Requires: ((emacs "29.1"))`, `;; URL: https://github.com/ecb-org/ecb`; set `Maintainer:` to the current maintainer; keep the original authors. Remove the stray `Version: 1.0.0` headers from `ecb-buffertab.el` and `ecb-multiframe.el` |
+| `-*- lexical-binding: t -*-` in every file | 3 of 33 shipped files; `ecb.el` explicitly says `lexical-binding: nil` | Step 5 |
+| Byte-compiles cleanly | 0 errors, 116 warnings | Step 5; then flip the lint job to blocking |
+| `package-lint` clean | Not yet run; expect findings for: multiple symbol prefixes (`tree-buffer-`, `silentcomp-` alongside `ecb-`), `defadvice`, obsolete functions, missing `Package-Requires`, `(require 'cl)` remnants, non-standard header order | Run it, triage, fix. `tree-buffer.el` and `silentcomp.el` are the hard cases: either document them as separate internal libraries (MELPA accepts a justification) or rename with an `ecb-` prefix behind aliases |
+| `checkdoc` clean | Not yet run; expect many docstring findings in a 2000-era codebase | Run per file as part of Step 5's file-by-file pass; fix the first-line and argument-case rules, leave prose alone |
+| Faces must not `:inherit` and also override attributes | `ecb-face.el` has 13 `:inherit` uses | Audit; split into pure-inherit faces, or drop the overrides |
+| Prefer `#'` for function references | Mixed | Mechanical pass with `package-lint`/`elisp-lint` guidance; do it per file in Step 5 |
+| No README/ChangeLog in the package | Recipe already excludes them | Keep; `ecb.texi` is fine (info files are the allowed exception) |
+| Recipe `:files` minimal | Includes `ecb2/` (unfinished rewrite) and would pick up `ecb-advice-test.el`, `ecb-examples.el` | After Step 6 removes `ecb2/` and `ecb-advice-test.el`, open a MELPA PR updating the recipe to `("*.el" "ecb-images" "ecb.texi")` minus examples, and confirm the texi still builds to info in the sandbox |
+| Tagged release for MELPA stable (`version-to-list`-compatible tag) | `v2.52` exists; nothing since | Tag `v2.53` when Steps 2-3 are merged (bug-fix release), then follow with tags per step |
+| Official repository, active maintainer, 1 month public history | Satisfied; recipe should point at the canonical repo, not a fork | Confirm the `:repo` in the recipe is the repo you consider canonical; fix in the same recipe PR if not |
+| AI policy: human first reviewer, `Assisted-by:` lines | `test/` files have the line; no shipped file has AI-generated code yet | Enforced per PR (see the policy note at the top). MELPA says its stance on AI-generated *packages* is under review; keep AI assistance to tests, tooling and targeted fixes with human review so ECB stays clearly a human-maintained package with assisted contributions |
+| Build and install via `package-build` | Not tested | Run `make recipes/ecb` and `make sandbox INSTALL=ecb` from a MELPA checkout before the recipe PR; add it to the release checklist |
+
+Order of work: the metadata and `COPYING` items are a one-evening PR and
+can go first. The lint job in Step 1 follow-ups gives the `package-lint` /
+`checkdoc` / warnings baseline. The bulk is Step 5 (lexical binding and
+warnings), which this step depends on. The recipe PR to MELPA goes last,
+after Step 6 has removed `ecb2/`.
+
+Exit criterion: the MELPA PR template checklist can be ticked honestly,
+`package-lint` and `checkdoc` report nothing on the shipped files, the
+byte-compile is warning-free, and `make sandbox INSTALL=ecb` installs and
+activates ECB from a locally built package.
+
 ## Sizing
 
 - Steps 0-1: done.
@@ -744,3 +798,6 @@ Finishing this step closes the ledger from Step 0.
 - Step 3: two or three PRs batched by file, an evening.
 - Step 4: several PRs over a few weeks.
 - Steps 5-6: incremental, can trail behind.
+- Step 7: the metadata/COPYING PR is an evening; the rest is gated on
+  Step 5. The MELPA recipe PR itself is small but expect a review cycle of
+  a week or more.

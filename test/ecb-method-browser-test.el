@@ -1,5 +1,8 @@
 ;;; ecb-method-browser-test.el --- tests for ecb-method-browser.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; The Methods buffer against the project-a fixture: semantic sources

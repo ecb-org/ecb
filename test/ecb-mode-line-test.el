@@ -1,5 +1,8 @@
 ;;; ecb-mode-line-test.el --- tests for ecb-mode-line.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Mode-line construction for the ECB tree buffers: prefix/data

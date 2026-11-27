@@ -1,5 +1,8 @@
 ;;; ecb-integration-test.el --- end-to-end scenarios for ECB -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Cross-module scenarios that drive ECB the way a user would: activate,

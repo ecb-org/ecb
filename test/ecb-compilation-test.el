@@ -1,5 +1,8 @@
 ;;; ecb-compilation-test.el --- tests for ecb-compilation.el and ecb-cycle.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Which buffers count as "compilation buffers" (and therefore go to the

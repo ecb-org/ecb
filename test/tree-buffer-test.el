@@ -1,5 +1,8 @@
 ;;; tree-buffer-test.el --- tests for tree-buffer.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Covers the pure tree-node data layer and the rendering layer of

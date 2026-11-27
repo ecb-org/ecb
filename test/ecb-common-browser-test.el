@@ -1,5 +1,8 @@
 ;;; ecb-common-browser-test.el --- tests for ecb-common-browser.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; The advice-set machinery (legacy `defecb-advice' and the new

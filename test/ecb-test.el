@@ -1,5 +1,8 @@
 ;;; ecb-test.el --- tests for ecb.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Activation and deactivation lifecycle: state, hooks, advices, timers,

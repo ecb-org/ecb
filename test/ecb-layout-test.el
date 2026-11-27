@@ -1,5 +1,8 @@
 ;;; ecb-layout-test.el --- tests for ecb-layout.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Window management: layout switching, maximize/undo, hiding ECB windows,

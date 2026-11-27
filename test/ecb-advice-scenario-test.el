@@ -1,5 +1,8 @@
 ;;; ecb-advice-scenario-test.el --- ERT port of the original advice-backbone test -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Klaus Berndl's original `ecb-advice-test.el' was a manual test: run

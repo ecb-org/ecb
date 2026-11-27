@@ -1,5 +1,8 @@
 ;;; ecb-layout-defs-test.el --- golden tests for ecb-layout-defs.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; Every shipped layout is drawn once and its window tree compared against a

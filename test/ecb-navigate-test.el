@@ -1,5 +1,8 @@
 ;;; ecb-navigate-test.el --- tests for ecb-navigate.el -*- lexical-binding: t -*-
 
+;; Author: Ryan Ware
+;; Assisted-by: Claude:claude-fable-5-1
+
 ;;; Commentary:
 ;;
 ;; The doubly linked list, the history item classes and the navigation
