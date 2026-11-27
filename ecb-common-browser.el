@@ -59,7 +59,7 @@
 
 (silentcomp-defvar modeline-map)
 
-(defvar ecb-show-advice-messages t
+(defvar ecb-show-advice-messages nil
   "Show advice messages used for debugging the device system during the
 conversion from old to new device system.
 Only temporary, should be deleted after finishing the conversion.")
