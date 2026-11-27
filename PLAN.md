@@ -553,7 +553,9 @@ The hand-run sweep made permanent:
 
 ## Step 1: CI
 
-**Status: done.** `.github/workflows/build.yml` runs on push to `main` and
+**Status: done; first run green on PR #58 (29.4, 30.1 and 31.1: 502 tests,
+0 unexpected; 24 expected failures on 29/30, 26 on 31, in both the
+byte-compiled and source passes).** `.github/workflows/build.yml` runs on push to `main` and
 on pull requests, with a matrix of Emacs 29.4, 30.1 and 31.1 via
 `purcell/setup-emacs`. Each job does `make ecb autoloads` (hard byte-compile
 errors fail the job; warnings are printed but not fatal until step 5), then
@@ -561,10 +563,8 @@ errors fail the job; warnings are printed but not fatal until step 5), then
 source. `scorecard.yml` is unchanged.
 
 Follow-ups once the first run is green:
-- The matrix has only been exercised locally on 30.2 and 31.1; the first PR
-  run is the first 29.4 result. If 29.4 differs, fix the test or add a
-  runtime-probed expected failure as was done for Emacs 31; do not skip by
-  version number.
+- If a future Emacs differs, fix the test or add a runtime-probed expected
+  failure as was done for Emacs 31; do not skip by version number.
 - Consider adding `snapshot` to the matrix as a non-blocking job. The Emacs
   31 `all` regression shows that new builtins can break ECB silently, and a
   snapshot job would have caught it months earlier.

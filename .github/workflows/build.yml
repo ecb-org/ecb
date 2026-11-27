@@ -20,7 +20,7 @@ jobs:
           - "30.1"
           - "31.1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: purcell/setup-emacs@master
         with:
@@ -31,7 +31,7 @@ jobs:
         # warnings are printed but not (yet) fatal.
         run: make ecb autoloads
 
-      - name: Run ERT suite (source)
+      - name: Run ERT suite (byte-compiled)
         # Tests run against the freshly compiled .elc files. stdin is closed by
         # the Makefile so an unexpected prompt fails fast instead of hanging.
         run: make test
