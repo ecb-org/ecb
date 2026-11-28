@@ -40,8 +40,8 @@ and needs a look before merging.
 
 **Status: done (2026-11-26, revalidated on Emacs 31.1 2026-11-27).** `test/`
 holds an ERT suite of 525 tests across 17 files; `make test` runs it in
-about 20-30 s on Emacs 30.2 and 31.1, from source or from `.elc`. 26 tests
-are marked `:expected-result :failed` (two of them only on Emacs >= 31,
+about 20-30 s on Emacs 30.2 and 31.1, from source or from `.elc`. 25 tests
+are marked `:expected-result :failed` (one of them only on Emacs >= 31,
 decided by a runtime probe rather than a version check); each one
 documents a real bug in its docstring and flips to an unexpected *pass* when
 the bug is fixed, so the suite stays green today and the fix steps below
@@ -53,7 +53,7 @@ cannot regress silently.
 | `ecb-util-test.el` | 51 | 2 |
 | `ecb-common-browser-test.el` | 39 | 3 |
 | `ecb-test.el` (activation, hooks, sync) | 27 | 1 |
-| `ecb-layout-test.el` / `ecb-layout-defs-test.el` | 49 / 10 | 3 / 2 |
+| `ecb-layout-test.el` / `ecb-layout-defs-test.el` | 49 / 10 | 2 / 2 |
 | `ecb-file-browser-test.el` | 55 | 2 |
 | `ecb-method-browser-test.el` | 51 | 0 |
 | `ecb-upgrade-test.el` | 47 | 1 |
@@ -104,13 +104,14 @@ each is assigned to a fix in Step 2 or Step 3):
   never removes it.
 
 Found by revalidating on Emacs 31.1 (both are regressions caused by Emacs
-changes, and both hit users with default settings):
+changes):
 
-- `ecb-layout`: `ecb-other-window-behavior` defaults to the symbol `all`
-  and `ecb-get-other-window` tests it with `functionp` before its
-  `cl-case`. Emacs 31 added a builtin function `all`, so `C-x o`
-  (`other-window`) signals `wrong-number-of-arguments` in every ECB session
-  until the user customizes the option (Step 2, item 1).
+- `ecb-layout`: **fixed.** `ecb-get-other-window` tested
+  `ecb-other-window-behavior` with `functionp` before its `cl-case`, and
+  Emacs 31 added a builtin function `all`, so users with the option set to
+  the symbol `all` (not the default, which is `smart`, but the value the
+  upgrade from `ecb-other-window-jump-behavior` produces) got
+  `wrong-number-of-arguments` from `C-x o` (Step 2, item 1).
 - `ecb-speedbar`: `ecb-speedbar-activate` calls `speedbar-disable-update`
   before the speedbar buffer exists; Emacs 31's `speedbar-set-timer` runs
   inside `speedbar-buffer`, so the `left-dir-plus-speedbar` layout (and any
@@ -592,7 +593,7 @@ Follow-ups once the first run is green:
 ## Step 2: Fix the known-bug tests, part 1 (user-visible breakages)
 
 Steps 2 and 3 together clear every `:expected-result :failed` marker in the
-suite (26 as of Emacs 31.1); when both are done, `make test` should report
+suite (25 as of Emacs 31.1, after Step 2 item 1); when both are done, `make test` should report
 "0 expected failures". They are split only by severity so the worst bugs
 ship first.
 
@@ -600,13 +601,13 @@ Everything here either crashes, silently loses data, or disables a core
 feature under default settings. One PR per bullet; each flips the named
 test(s). Suggested order is by how many users hit it.
 
-1. **`other-window` broken on Emacs 31** (`ecb-layout.el`,
-   `ecb-get-other-window`). `ecb-other-window-behavior` defaults to the
-   symbol `all`; the code checks `(functionp behavior)` before its
-   `cl-case`, and Emacs 31 defines a builtin `all`. Reorder the dispatch so
-   the known symbols are matched first and only then fall back to
-   `functionp`. Audit the other symbol-valued options tested with
-   `functionp`/`fboundp` (`ecb-windows-hidden-all-value` is `'all` too).
+1. **`other-window` broken on Emacs 31 with `ecb-other-window-behavior`
+   `all`** (`ecb-layout.el`, `ecb-get-other-window`). **Done.** The code
+   checked `(functionp behavior)` before its `cl-case`, and Emacs 31
+   defines a builtin `all`; the known symbols are now matched first and
+   only then does it fall back to `functionp`. Audit of other
+   symbol-valued options: `ecb-windows-hidden-all-value` is compared with
+   `equal`, nothing else dispatches on `functionp`.
    Test: `ecb-other-window-cycles-through-edit-and-ecb-windows`.
 2. **Methods buffer empty for grouped imenu** (`ecb-method-browser.el`,
    `ecb-get-tags-for-non-semantic-files`). `cl-return` inside a plain

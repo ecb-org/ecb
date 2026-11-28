@@ -2657,7 +2657,12 @@ NTH-WINDOW is nil then it is treated as 1."
          (compwin-state (ecb-compile-window-state))
          (minibuf-win (if (> (minibuffer-depth) 0)
                           (minibuffer-window ecb-frame))))
-    (if (functionp ecb-other-window-behavior)
+    ;; The symbolic settings must be recognized before the function test:
+    ;; a user may legitimately name a function with one of them (Emacs 31
+    ;; ships a builtin `all'), and then `functionp' would misroute it.
+    (if (and (not (memq ecb-other-window-behavior
+                        '(all only-edit edit-and-compile smart)))
+             (functionp ecb-other-window-behavior))
         (let ((other-win (funcall ecb-other-window-behavior
                                   windows-list
                                   edit-win-list

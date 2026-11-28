@@ -418,12 +418,6 @@ either side is fixed."
         (remove "left-dir-plus-speedbar" all)
       all)))
 
-(defun ecb-test-symbol-all-is-a-function-p ()
-  "Non-nil when this Emacs defines `all' as a function (Emacs >= 31).
-ECB's `ecb-other-window-behavior' defaults to the symbol `all' and
-`ecb-get-other-window' tests it with `functionp' first, so on such an
-Emacs `other-window' calls `all' with the wrong arguments."
-  (functionp 'all))
 
 (provide 'ecb-test-helpers)
 ;;; ecb-test-helpers.el ends here
